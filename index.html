@@ -1,0 +1,1783 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Project Tracker</title>
+<link rel="icon" type="image/x-icon" href="favicon-pm.png">
+<style>
+/* ================================
+   COLOR SYSTEM
+================================ */
+:root {
+  --bg-app: #f3f6fb;
+  --bg-card: #ffffff;
+
+  --primary: #4f46e5;      /* indigo */
+  --primary-soft: #eef2ff;
+  --accent: #0891b2;       /* teal/cyan */
+  --success: #16a34a;
+  --warning: #f59e0b;
+  --danger: #dc2626;
+
+  --text-main: #1f2937;
+  --text-muted: #6b7280;
+  --border-soft: #e5e7eb;
+
+  --shadow-soft:
+    0 1px 3px rgba(0,0,0,0.06),
+    0 8px 20px rgba(0,0,0,0.07);
+}
+
+/* ================================
+   BASE / RESET
+================================ */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 20px;
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+  background:
+    radial-gradient(1200px 600px at top right, #dde7ff 0%, transparent 60%),
+    var(--bg-app);
+  color: var(--text-main);
+}
+
+h1 {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  border-radius: 10px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  color: white;
+  background: linear-gradient(135deg, var(--primary), #3730a3);
+  box-shadow: 0 4px 14px rgba(79,70,229,0.35);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(79,70,229,0.45);
+}
+
+button:active {
+  transform: translateY(1px);
+}
+
+/* ================================
+   INPUTS
+================================ */
+input,
+textarea,
+select {
+  font-family: inherit;
+  font-size: 13px;
+  padding: 8px 10px;
+  border-radius: 9px;
+  border: 1px solid var(--border-soft);
+  background: white;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(79,70,229,0.15);
+}
+
+textarea {
+  min-height: 70px;
+  resize: vertical;
+}
+
+/* ================================
+   HEADER
+================================ */
+.header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.active-count {
+  font-size: 13px;
+  color: var(--text-muted);
+  background: var(--primary-soft);
+  padding: 6px 10px;
+  border-radius: 999px;
+}
+
+.section-header {
+  margin-top: 16px;
+  margin-bottom: 6px;
+  padding-top:6px;
+
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+
+  color: var(--primary);
+  border-bottom: 1px solid var(--border-soft);
+}
+
+/* ================================
+   CONTROLS
+================================ */
+.controls {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.controls-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.controls-row.full-width input#projectFilter {
+  width: 100%;
+}
+
+/* ================================
+   PROJECT CARD
+================================ */
+.project {
+  background: var(--bg-card);
+  padding: 14px;
+  margin-bottom: 14px;
+  border-radius: 16px;
+  border: 1px solid var(--border-soft);
+  /* transition: transform 0.12s ease, box-shadow 0.12s ease; */
+  transition: box-shadow 0.18s ease, outline 0.18s ease;
+  position: relative;
+  background: var(--bg-card);
+  padding: 14px;
+  margin-bottom: 14px;
+  border-radius: 16px;
+  
+  /* permanent outline */
+  outline: 2px solid rgba(79, 70, 229, 0.45);
+
+  /* permanent soft glow */
+  box-shadow:
+    0 0 0 3px rgba(79, 70, 229, 0.18),
+    var(--shadow-soft);
+}
+
+.project:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    0 4px 14px rgba(0,0,0,0.08),
+    0 12px 30px rgba(0,0,0,0.06);
+}
+
+.project.dragging {
+  opacity: 0.5;
+}
+
+.project.archive {
+  background: #f8fafc;
+  opacity: 0.85;
+}
+
+/* ================================
+   PROJECT TITLE
+================================ */
+.project strong {
+  font-size: 21px;
+  font-weight: 600;
+}
+
+.project-name:hover{
+  cursor: text;
+}
+
+.project-description:hover{
+  cursor: text;
+}
+
+.project strong.project-description{
+  font-size: 14px;
+  font-weight: 400;
+  display: block;
+  margin-top: 7px;
+}
+
+/* ================================
+   SMALL TEXT
+================================ */
+.small {
+  font-size: 12px;
+}
+
+.small-bulleted-disciplines{
+  padding-left: 30px;
+}
+
+.small-bulleted-disciplines > li {
+  margin-bottom: 5px;
+}
+
+.row > label{
+  font-size:14px;
+}
+
+.task-card {
+  cursor: grab;
+}
+
+.task-card:active {
+  cursor: grabbing;
+}
+
+.date-item {
+  cursor: grab;
+}
+
+.date-item:active {
+  cursor: grabbing;
+}
+
+.wbs-item {
+  cursor: grab;
+}
+
+.wbs-item:active {
+  cursor: grabbing;
+  opacity: 0.85;
+}
+
+.hyperlink-item {
+  cursor: grab;
+}
+
+.hyperlink-item:active {
+  cursor: grabbing;
+  opacity: 0.85;
+}
+
+.busops-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap; /* allows wrap on smaller screens */
+}
+
+.busops-inline {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+#busops-disciplines {
+  margin-top: 13px;
+}
+
+.btn-shorter{
+ padding: 5px 14px;
+}
+
+/* Subtle pill around checkbox + label text */
+.chk-pill {
+  display: inline-flex;
+  align-items.chk-pill input[type="checkbox"] {  align-items: center;
+  width: 16px;
+  height: 16px;
+  accent-color: var(--primary); /* modern browsers */
+}
+
+/* Disabled state (if you disable checkbox inputs) */
+.chk-pill input[type="checkbox"]:disabled + span,
+.chk-pill input[type="checkbox"]:disabled {
+  opacity: 0.6;
+}
+  gap: 8px;
+
+  padding: 6px 10px;
+  border-radius: 999px;
+
+  background: rgba(79, 70, 229, 0.06); /* soft indigo tint */
+  background: #f3f4f6; /* gray-100: very light neutral */
+  background: #f0f2f5; /* midpoint between #f3f4f6 and #eceff3 */
+  /*background: #eceff3; /* gray-150: subtle step darker */
+  /* background: #e5e7eb; /* gray-200: soft neutral (your border-soft) */
+  /* background: #dde3ea; /* gray-250: slightly darker than gray-200 */
+  /* background: #d1d5db; /* gray-300: noticeably darker, still subtle */
+  /* background: #cbd2da; /* gray-350: chip-like background, a bit stronger */
+  border: 1px solid rgba(79, 70, 229, 0.10);
+
+  color: var(--text-main);
+  font-size: 13px;
+
+  transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.chk-pill:hover {
+  background: rgba(79, 70, 229, 0.09);
+  border-color: rgba(79, 70, 229, 0.18);
+}
+
+/* When keyboard focusing the checkbox inside the pill */
+.chk-pill:focus-within {
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.18);
+  border-color: rgba(79, 70, 229, 0.30);
+}
+
+/* Targets ONLY the group header strong (Training/Ops/No Group) */
+.project .section-header + .row + ul.small > li > strong {
+  color: var(--primary);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* Grid container */
+.status-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+  align-items: start; /* keeps fields aligned at top (optional) */
+}
+
+/* Each field (label wraps text + select) */
+.status-grid > label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;          /* centers select under the label */
+  justify-content: center;
+  gap: 6px;
+  text-align: center;           /* centers the label text */
+  margin-top: 10px;
+}
+
+/* Make selects consistent width so they align nicely */
+.status-grid select {
+  width: 100%;
+  max-width: 160px;             /* keep them uniform */
+}
+
+
+</style>
+</head>
+<body>
+<div class="header-row">
+  <h1>Project Management Tracker</h1>
+  <div id="activeCount" class="active-count">Active projects: 0</div>
+</div>
+
+<div class="controls">
+  <div class="controls-row">
+    <input id="newProjectName" placeholder="New project name" onkeydown="if(event.key==='Enter'){ event.preventDefault(); addProject(); }" />
+    <button onclick="addProject()">Add Project</button>
+    <button onclick="toggleArchiveView()">Show/Hide Archived</button>
+    <button onclick="exportData()">Export Data</button>
+    <button onclick="openImportModal()">Import Data</button>
+  </div>
+  <div class="controls-row full-width">
+    <input id="projectFilter" placeholder="Filter projects..." oninput="render()" />
+  </div>
+</div>
+
+<div id="projectList"></div>
+<input
+  type="file"
+  id="importFileInput"
+  accept=".json"
+  style="display:none"
+  onchange="handleImportFile(this.files[0])"
+/>
+<script>
+let projects = JSON.parse(localStorage.getItem('projects') || '[]');
+let showArchived = false;
+let dragIndex = null;
+let dragMember = null;
+let dragTask = null;
+let dragMemberProject = null;
+let dragMemberIndex = null;
+let dragWBSProject = null;
+let dragWBSIndex = null;
+let dragLinkProject = null;
+let dragLinkIndex = null;
+
+function save() {
+  localStorage.setItem('projects', JSON.stringify(projects));
+}
+
+function addProject() {
+  const name = document.getElementById('newProjectName').value.trim();
+  if (!name) return;
+  projects.push({
+    name,
+    name2: '',
+    description:'',
+    archived:false,
+    weeklyMeeting:false,
+    weeklyMeetingDay:'',
+    weeklyMeetingTime:'',
+    weeklyMeetingTimezone:'PST',
+    skippedAllTasks:false,
+    orpRelated:false,
+    state:'',
+    wbs:[],
+    hyperlinks:[],
+    members:[],
+    tasks:[],
+    notes:'',
+    primaryVendor: '',
+    projectStatus: 'Pending',
+    itmoPM: '',
+    busOpsPM: '',
+    programRequester: '',
+    itAnalyst: '',
+    cammiManager: '',
+    businessAnalyst: '',
+    testAnalyst: '',
+    busOpsDisciplines: [],
+    confirmedBusOpsDisciplines: false,
+    busOpsDisciplineConfirmedDate: '',
+    busOpsDisciplineConfirmedBy: ''
+
+
+  });
+  document.getElementById('newProjectName').value = '';
+  save();
+  render();
+}
+
+function deleteProject(i) {
+  projects.splice(i,1);
+  save(); render();
+}
+
+function toggleArchive(i) {
+  projects[i].archived = !projects[i].archived;
+  save(); render();
+}
+
+function updateField(i, field, value) {
+  projects[i][field] = value;
+  save();
+}
+
+
+
+function normalizeGroupName(name) {
+  return name.trim().replace(/\s+/g,' ').replace(/\b\w/g, c => c.toUpperCase());
+}
+
+function normalizeGroupKey(name) {
+  return normalizeGroupName(name).toLowerCase();
+}
+
+function handleMemberEnter(projectIndex, event) {
+  if (event.key !== 'Enter') return;
+
+  event.preventDefault();
+
+  const nameInput = document.getElementById(`mname-${projectIndex}`);
+  const emailInput = document.getElementById(`memail-${projectIndex}`);
+  const groupsInput = document.getElementById(`mgroups-${projectIndex}`);
+
+  const name = nameInput.value.trim();
+  const email = emailInput.value.trim();
+  const groups = groupsInput.value.trim();
+
+  // Only add if ANY field has content
+  if (!name && !email && !groups) return;
+
+  addMember(projectIndex, name, email, groups);
+
+  // Clear inputs after add
+  nameInput.value = '';
+  emailInput.value = '';
+  groupsInput.value = '';
+
+  // Put cursor back in name field for fast entry
+  nameInput.focus();
+}
+
+function addMember(i, name, email, groups) {
+  const finalName = name && name.trim() ? name.trim() : 'No Name';
+  const finalEmail = email && email.trim() ? email.trim() : 'No Email';
+
+  // If literally nothing was entered anywhere, do nothing
+  if (finalName === 'No Name' && finalEmail === 'No Email' && !groups?.trim()) {
+    return;
+  }
+
+  projects[i].members.push({
+    name: finalName,
+    email: finalEmail,
+    groups: groups
+      ? groups.split(',')
+          .map(normalizeGroupName)
+          .filter(Boolean)
+          .filter((g, idx, arr) =>
+            arr.findIndex(x => normalizeGroupKey(x) === normalizeGroupKey(g)) === idx
+          )
+      : [],
+    includeInEmail: finalEmail !== 'No Email'
+  });
+
+  save();
+  render();
+}
+
+function deleteMember(projectIndex, memberIndex) {
+  projects[projectIndex].members.splice(memberIndex, 1);
+  save();
+  render();
+}
+
+function toggleIncludeInEmail(projectIndex, memberIndex) {
+  projects[projectIndex].members[memberIndex].includeInEmail = !projects[projectIndex].members[memberIndex].includeInEmail;
+  save();
+  render();
+}
+
+function editMember(projectIndex, memberIndex) {
+  const member = projects[projectIndex].members[memberIndex];
+  const name = prompt("Edit member name", member.name);
+  if (name === null) return;
+
+  const email = prompt("Edit member email", member.email);
+  if (email === null) return;
+
+  const groups = prompt("Edit groups (comma separated)", (member.groups || []).join(", "));
+  if (groups === null) return;
+
+  member.name = name.trim() || member.name;
+  member.email = email.trim() || member.email;
+  member.groups = groups
+    ? groups.split(",")
+        .map(normalizeGroupName)
+        .filter(Boolean)
+        .filter((g, idx, arr) => arr.findIndex(x => normalizeGroupKey(x) === normalizeGroupKey(g)) === idx)
+    : [];
+  save();
+  render();
+}
+
+function copyEmail(projectIndex, memberIndex) {
+  const member = projects[projectIndex].members[memberIndex];
+  if (!member || !member.email) return;
+  navigator.clipboard.writeText(member.email).then(() => {
+    showCopyToast('Email copied');
+  });
+}
+
+function copyGroupEmails(projectIndex, group) {
+  const key = normalizeGroupKey(group);
+  const members = projects[projectIndex].members.filter(m =>
+    (m.groups || []).some(g => normalizeGroupKey(g) === key) && m.includeInEmail
+  );
+  const emails = members.map(m => m.email).join('; ');
+  navigator.clipboard.writeText(emails).then(() => {
+    showCopyToast('Group emails copied');
+  });
+}
+
+
+function showCopyToast(message = 'Copied!') {
+  let toast = document.getElementById('copyToast');
+
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'copyToast';
+    toast.className = 'copy-toast';
+    document.body.appendChild(toast);
+  }
+
+  toast.textContent = message;
+  toast.classList.add('show');
+
+  clearTimeout(toast._timeout);
+  toast._timeout = setTimeout(() => {
+    toast.classList.remove('show');
+  }, 1500);
+}
+
+function copyWBS(code) {
+  navigator.clipboard.writeText(code).then(() => {
+    showCopyToast('WBS code copied');
+  });
+}
+
+function addWBS(projectIndex) {
+  const type = document.getElementById(`wbsType-${projectIndex}`).value;
+  const code = document.getElementById(`wbsCode-${projectIndex}`).value.trim();
+  if (!code) return;
+  projects[projectIndex].wbs.push({type, code});
+  document.getElementById(`wbsCode-${projectIndex}`).value = '';
+  save();
+  render();
+}
+
+function editWBS(projectIndex, wbsIndex) {
+  const wbs = projects[projectIndex].wbs[wbsIndex];
+  let type = prompt("Edit Hour Type (Project, Assessment, T&M, or Blank)", wbs.type);
+  if (type === null) return;
+  type = type.trim();
+  if (!['Project', 'Assessment', 'T&M', 'Blank'].includes(type)) {
+    alert('Invalid type. Must be Project, Assessment, T&M, or Blank.');
+    return;
+  }
+  const code = prompt("Edit WBS Code", wbs.code);
+  if (code === null) return;
+  wbs.type = type;
+  wbs.code = code.trim() || wbs.code;
+  save();
+  render();
+}
+
+function deleteWBS(projectIndex, wbsIndex) {
+  projects[projectIndex].wbs.splice(wbsIndex, 1);
+  save();
+  render();
+}
+
+function addHyperlink(projectIndex) {
+  const type = document.getElementById(`linkType-${projectIndex}`).value;
+  const url = document.getElementById(`linkUrl-${projectIndex}`).value.trim();
+  if (!url) return;
+  projects[projectIndex].hyperlinks = projects[projectIndex].hyperlinks || [];
+  projects[projectIndex].hyperlinks.push({type, url});
+  document.getElementById(`linkUrl-${projectIndex}`).value = '';
+  save();
+  render();
+}
+
+function editHyperlink(projectIndex, linkIndex) {
+  const link = projects[projectIndex].hyperlinks[linkIndex];
+  let type = prompt("Edit Link Type (Gainwell SharePoint, DHCS SNOW Link, or Blank)", link.type);
+  if (type === null) return;
+  type = type.trim();
+  if (!['Gainwell SharePoint', 'DHCS SNOW Link', 'Blank'].includes(type)) {
+    alert('Invalid type. Must be Gainwell SharePoint, DHCS SNOW Link, or Blank.');
+    return;
+  }
+  const url = prompt("Edit URL", link.url);
+  if (url === null) return;
+  link.type = type;
+  link.url = url.trim() || link.url;
+  save();
+  render();
+}
+
+function deleteHyperlink(projectIndex, linkIndex) {
+  projects[projectIndex].hyperlinks.splice(linkIndex, 1);
+  save();
+  render();
+}
+
+function copyHyperlink(url) {
+  navigator.clipboard.writeText(url).then(() => {
+    showCopyToast('URL copied');
+  });
+}
+
+function normalizeProjects() {
+  projects.forEach(p => {
+    // Ensure members array exists
+    if (!Array.isArray(p.members)) p.members = [];
+
+    // Role fields
+    p.primaryVendor ??= '';
+    p.projectStatus ??= 'Pending';
+    p.itmoPM ??= '';
+    p.busOpsPM ??= '';
+    p.programRequester ??= '';
+    p.itAnalyst ??= '';
+    p.cammiManager ??= '';
+    p.businessAnalyst ??= '';
+    p.testAnalyst ??= '';
+    // project fields
+    p.name2 ??= '';
+    p.busOpsDisciplines ??= [];
+    p.confirmedBusOpsDisciplines ??= false;
+    p.busOpsDisciplineConfirmedDate ??= '';
+    p.busOpsDisciplineConfirmedBy ??= '';
+  });
+
+  save();
+}
+
+function render() {
+  const filter = document.getElementById('projectFilter').value.trim().toLowerCase();
+
+  document.getElementById('activeCount').innerText =
+    `Active projects: ${projects.filter(p => !p.archived).length}`;
+
+  projects.forEach(p => {
+    if (!Array.isArray(p.members)) p.members = [];
+    if (!Array.isArray(p.wbs)) p.wbs = [];
+    if (!Array.isArray(p.hyperlinks)) p.hyperlinks = [];
+    if (!Array.isArray(p.tasks)) p.tasks = [];
+    if (!Array.isArray(p.dates)) p.dates = [];
+    if (typeof p.orpRelated !== 'boolean') p.orpRelated = false
+    
+    p.members.forEach(m => {
+      if (!Array.isArray(m.groups)) m.groups = [];
+    });
+  });
+
+
+  const container = document.getElementById('projectList');
+  container.innerHTML = '';
+
+  projects.forEach((_, i) => {
+  const p = projects[i]; // ✅ force fresh state reference
+    if (p.archived && !showArchived) return;
+    if (filter && !p.name.toLowerCase().includes(filter)) return;
+
+    const div = document.createElement('div');
+    div.className = 'project' + (p.archived?' archive':'');
+    div.draggable = true;
+
+    div.ondragstart = ()=>{ dragIndex=i; div.classList.add('dragging'); };
+    div.ondragend = ()=> div.classList.remove('dragging');
+    div.ondragover = e=>e.preventDefault();
+    div.ondrop = ()=>{
+      const temp = projects[dragIndex];
+      projects.splice(dragIndex,1);
+      projects.splice(i,0,temp);
+      save(); render();
+    };
+div.innerHTML = `
+  <div
+    style="
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+    "
+  >
+    <!-- Project Name -->
+    <strong
+      contenteditable="false"
+      class="project-name"
+      ondblclick="enableNameEdit(this)"
+      onkeydown="handleNameKey(event, ${i}, this)"
+      onblur="saveNameEdit(${i}, this)"
+      style="white-space: nowrap; cursor: text;"
+    >
+      ${p.name}
+    </strong>
+
+    <!-- Separator -->
+    <span style="color:var(--border-soft); font-weight:600;">│</span>
+
+    <!-- Project Name 2 -->
+    <strong
+      contenteditable="false"
+      class="project-name project-name-secondary"
+      ondblclick="enableName2Edit(this)"
+      onkeydown="handleName2Key(event, ${i}, this)"
+      onblur="saveName2Edit(${i}, this)"
+      style="white-space:nowrap;"
+    >
+      ${p.name2 || ''}
+    </strong>
+
+    <!-- FLEX SPACER -->
+    <div style="flex: 1;"></div>
+
+    <!-- Active Indicator -->
+    <span
+      class="small"
+      style="
+        white-space:nowrap;
+        padding:3px 8px;
+        border-radius:999px;
+        font-weight:600;
+        background:${p.archived
+          ? 'rgba(220,38,38,0.15)'
+          : 'rgba(22,163,74,0.15)'};
+        color:${p.archived
+          ? '#dc2626'
+          : '#16a34a'};
+      "
+    >
+      ${p.archived ? 'Archived' : 'Active'}
+    </span>
+
+
+    <!-- Separator -->
+    <span style="color:var(--border-soft); font-weight:600;">│</span>
+
+    <!-- Archive/Delete Buttons -->
+    <div style="display:flex; gap:6px; white-space:nowrap;">
+
+      <!-- Archive/Restore -->
+      <button onclick="toggleArchive(${i})"
+              style="font-size:11px; padding:4px 8px;">
+        ${p.archived ? 'Restore' : 'Archive'}
+      </button>
+
+      <!-- Delete -->
+      <button onclick="deleteProject(${i})"
+              style="font-size:11px; padding:4px 8px;">
+        Delete
+      </button>
+
+    </div>
+
+  </div>
+
+  <!-- Project Description -->
+  <strong
+    contenteditable="false"
+    class="project-description"
+    ondblclick="enableDescriptionEdit(this)"
+    onkeydown="handleDescriptionKey(event, ${i}, this)"
+    onblur="saveDescriptionEdit(${i}, this)"
+  >
+    ${p.description || 'Project objectives / description'}
+  </strong>
+
+
+  <!-- BusOps Disciplines -->
+  <div class="row">
+      <div class="section-header" id="busops-disciplines">BusOps Disciplines</div>
+  <div class="row">
+
+  <div class="busops-row">
+
+    <!-- Discipline Selection -->
+    <select id="busOpsDiscipline-${i}">
+      <option value="">Select discipline</option>
+      <option>Publications</option>
+      <option>Training</option>
+    </select>
+
+    <!-- Add Discipline -->
+    <button class="btn-shorter" onclick="addBusOpsDiscipline(${i})">
+      Add Discipline
+    </button>
+
+    
+    <label class="chk-pill" style="display:flex; align-items:center; gap:6px;">
+      <!-- ConfirmedCheckbox -->
+      <input
+        type="checkbox"
+        ${p.confirmedBusOpsDisciplines ? 'checked' : ''}
+        onchange="
+          updateField(${i}, 'confirmedBusOpsDisciplines', this.checked);
+          render();
+        "
+      >
+      Confirmed BusOps Disciplines
+    </label>
+
+    <!-- Confirmation Date -->
+    <label style="display:flex; align-items:center; gap:6px;">
+      <span class="small">Date: </span>
+      <input
+        type="date"
+        ${!p.confirmedBusOpsDisciplines ? 'disabled' : ''}
+        value="${p.busOpsDisciplineConfirmedDate || ''}"
+        onchange="updateField(${i}, 'busOpsDisciplineConfirmedDate', this.value)"
+      >
+    </label>
+
+    <!-- Confirmed By -->
+    <label style="display:flex; align-items:center; gap:6px;">
+      <span class="small">Confirmed By</span>
+      <select
+        ${!p.confirmedBusOpsDisciplines ? 'disabled' : ''}
+        onchange="updateField(${i}, 'busOpsDisciplineConfirmedBy', this.value)"
+      >
+        ${memberOptions(p, p.busOpsDisciplineConfirmedBy)}
+      </select>
+    </label>
+  </div>
+
+
+  <!-- Bulleted Disciplines -->
+  <ul class="small small-bulleted-disciplines">
+    ${(p.busOpsDisciplines || []).map((d, idx) => `
+      <li
+        draggable="true"
+        ondragstart="disciplineDragStart(${i}, ${idx})"
+        ondragend="disciplineDragEnd()"
+        ondragover="event.preventDefault()"
+        ondrop="disciplineDrop(${i}, ${idx})"
+      >
+        ${d.type}
+
+        <button onclick="editBusOpsDiscipline(${i}, ${idx})"
+                style="font-size:11px; padding:2px 6px;">
+          ✏️
+        </button>
+
+        <button onclick="deleteBusOpsDiscipline(${i}, ${idx})"
+                style="font-size:11px; padding:2px 6px;">
+          🗑️
+        </button>
+      </li>
+    `).join('')}
+  </ul>
+
+
+  <div class="section-header">Overall Project Status</div>
+
+  <div class="row status-grid">
+
+    <label>
+      Primary Vendor
+      <select onchange="updateField(${i}, 'primaryVendor', this.value)">
+        <option value="">Select</option>
+        <option value="ITMO" ${p.primaryVendor === 'ITMO' ? 'selected' : ''}>ITMO</option>
+        <option value="BusOps" ${p.primaryVendor === 'BusOps' ? 'selected' : ''}>BusOps</option>
+      </select>
+    </label>
+
+    <label>
+      Project Status
+      <select onchange="updateField(${i}, 'projectStatus', this.value)">
+        <option value="" ${!p.projectStatus ? 'selected' : ''}>Select</option>
+        ${['Pending','Open','Work in Progress','Waiting Approval'].map(s => `
+          <option value="${s}" ${p.projectStatus === s ? 'selected' : ''}>
+            ${s}
+          </option>
+        `).join('')}
+      </select>
+    </label>
+
+    <label>ITMO PM
+      <select onchange="updateField(${i}, 'itmoPM', this.value)">
+        ${memberOptions(p, p.itmoPM)}
+      </select>
+    </label>
+
+    <label>BusOps PM
+      <select onchange="updateField(${i}, 'busOpsPM', this.value)">
+        ${memberOptions(p, p.busOpsPM)}
+      </select>
+    </label>
+
+    <label>Program Requester
+      <select onchange="updateField(${i}, 'programRequester', this.value)">
+        ${memberOptions(p, p.programRequester)}
+      </select>
+    </label>
+
+    <label>IT Analyst
+      <select onchange="updateField(${i}, 'itAnalyst', this.value)">
+        ${memberOptions(p, p.itAnalyst)}
+      </select>
+    </label>
+
+    <label>CA‑MMIS Manager
+      <select onchange="updateField(${i}, 'cammiManager', this.value)">
+        ${memberOptions(p, p.cammiManager)}
+      </select>
+    </label>
+
+    <label>Business Analyst
+      <select onchange="updateField(${i}, 'businessAnalyst', this.value)">
+        ${memberOptions(p, p.businessAnalyst)}
+      </select>
+    </label>
+
+    <label>Test Analyst
+      <select onchange="updateField(${i}, 'testAnalyst', this.value)">
+        ${memberOptions(p, p.testAnalyst)}
+      </select>
+    </label>
+
+            <label>Project State: <select onchange="updateField(${i},'state',this.value)">
+          <option value="" ${p.state===''?'selected':''}>Unassigned</option>
+          <option value="1-Inception" ${p.state==='1-Inception'?'selected':''}>1-Inception</option>
+          <option value="2-Elaboration" ${p.state==='2-Elaboration'?'selected':''}>2-Elaboration</option>
+          <option value="3-Construction" ${p.state==='3-Construction'?'selected':''}>3-Construction</option>
+          <option value="4-Transition" ${p.state==='4-Transition'?'selected':''}>4-Transition</option>
+        </select></label>
+
+  </div>
+
+  <div class="section-header">Checkboxes</div>
+<div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+
+  <label class="chk-pill" style="display:flex; align-items:center; gap:6px;">
+    <input
+      type="checkbox"
+      ${p.weeklyMeeting ? 'checked' : ''}
+      onchange="
+        updateField(${i}, 'weeklyMeeting', this.checked);
+        render();
+      "
+    >
+    Weekly Meeting
+  </label>
+
+<div class="row" style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+
+  <!-- Weekly Meeting + Day + Time -->
+  <div style="display:flex; align-items:center; gap:8px;">
+
+
+    <select
+      ${!p.weeklyMeeting ? 'disabled' : ''}
+      onchange="updateField(${i}, 'weeklyMeetingDay', this.value)">
+      <option value="">Day</option>
+      ${['Monday','Tuesday','Wednesday','Thursday','Friday'].map(d => `
+        <option value="${d}" ${p.weeklyMeetingDay === d ? 'selected' : ''}>
+          ${d}
+        </option>
+      `).join('')}
+    </select>
+
+    <span class="small">at</span>
+
+    <input
+      type="time"
+      ${!p.weeklyMeeting ? 'disabled' : ''}
+      value="${p.weeklyMeetingTime || ''}"
+      onchange="updateField(${i}, 'weeklyMeetingTime', this.value)">
+
+    <span class="small">PST</span>
+  </div>
+
+  <!-- Skipped SNOW Tasks -->
+  <label class="chk-pill">
+    <input
+      type="checkbox"
+      ${p.skippedAllTasks ? 'checked' : ''}
+      onchange="updateField(${i}, 'skippedAllTasks', this.checked)">
+    Skipped All SNOW Tasks
+  </label>
+
+  <!-- ORP Related -->
+  <label class="chk-pill">
+    <input
+      type="checkbox"
+      ${p.orpRelated ? 'checked' : ''}
+      onchange="updateField(${i}, 'orpRelated', this.checked)">
+    ORP Related Project
+  </label>
+
+</div>
+</div>
+</div>
+
+      <div class="row">
+
+      </div>
+      <div class="section-header">WBS Codes</div>
+      <div class="row">
+        <select id="wbsType-${i}">
+          <option selected>Project</option>
+          <option>Assessment</option>
+          <option>T&M</option>
+        </select>
+        <input placeholder="WBS Code" id="wbsCode-${i}">
+        <button class="btn-shorter" onclick="addWBS(${i})">Add WBS</button>
+      </div>
+
+      <ul class="small">
+        ${(p.wbs || []).map((w, idx) => `
+          <li
+            draggable="true"
+            class="wbs-item"
+            ondragstart="wbsDragStart(${i}, ${idx})"
+            ondragend="wbsDragEnd()"
+            ondragover="event.preventDefault()"
+            ondrop="wbsDrop(${i}, ${idx})"
+          >
+            ${w.type}: ${w.code}
+
+            <button onclick="copyWBS('${w.code}')"
+                    style="font-size:11px; padding:2px 6px;">Copy</button>
+
+            <button onclick="editWBS(${i}, ${idx})"
+                    style="font-size:11px; padding:2px 6px;">✏️</button>
+
+            <button onclick="deleteWBS(${i}, ${idx})"
+                    style="font-size:11px; padding:2px 6px;">🗑️</button>
+          </li>
+        `).join('')}
+      </ul>
+
+      <div class="section-header">Hyperlinks</div> 
+      <div class="row">
+        <select id="linkType-${i}">
+          <option value="">Select</option>
+          <option>Gainwell SharePoint</option>
+          <option>DHCS SNOW Link</option>
+        </select>
+        <input placeholder="Hyperlink URL" id="linkUrl-${i}">
+        <button class="btn-shorter" onclick="addHyperlink(${i})">Add Link</button>
+      </div>
+
+      <ul class="small">
+        ${(p.hyperlinks || []).map((l, idx) => `
+          <li
+            draggable="true"
+            class="hyperlink-item"
+            ondragstart="linkDragStart(${i}, ${idx})"
+            ondragend="linkDragEnd()"
+            ondragover="event.preventDefault()"
+            ondrop="linkDrop(${i}, ${idx})"
+          >
+            <a href="${l.url}" target="_blank">${l.type}</a>
+
+            <button onclick="copyHyperlink('${l.url}')"
+                    style="font-size:11px; padding:2px 6px;">Copy</button>
+
+            <button onclick="editHyperlink(${i}, ${idx})"
+                    style="font-size:11px; padding:2px 6px;">✏️</button>
+
+            <button onclick="deleteHyperlink(${i}, ${idx})"
+                    style="font-size:11px; padding:2px 6px;">🗑️</button>
+          </li>
+        `).join('')}
+      </ul>
+
+      <div class="section-header">Tasks</div>
+      <div class="row">
+        <input
+          placeholder="Add task"
+          id="taskInput-${i}"
+          onkeydown="if(event.key==='Enter'){event.preventDefault(); addProjectTask(${i})}"
+        >
+        <button class="btn-shorter" onclick="addProjectTask(${i})">Add Task</button>
+      </div>
+
+      <div class="task-list">
+        ${(p.tasks || []).map((t, idx) => `
+          <div class="task-card"
+              draggable="true"
+              ondragstart="taskDragStart(${i}, ${idx})"
+              ondragend="taskDragEnd()"
+              ondragover="event.preventDefault()"
+              ondrop="taskDrop(${i}, ${idx})">
+
+            <span>${t.text}</span>
+
+            <button onclick="editProjectTask(${i}, ${idx})"
+                    style="font-size:11px; padding:2px 6px;">✏️</button>
+
+            <button onclick="deleteProjectTask(${i}, ${idx})"
+                    style="font-size:11px; padding:2px 6px;">🗑️</button>
+          </div>
+        `).join('')}
+      </div>
+
+    <div class="section-header">Dates</div>
+    <div class="row">
+      <select id="dateType-${i}">
+        <option value="">Select</option>
+        <option>OCC Letter</option>
+        <option>Start Date</option>
+        <option>Kickoff Meeting</option>
+        <option>SIT</option>
+        <option>UAT</option>
+        <option>PROD</option>
+      </select>
+
+      <input type="date" id="dateValue-${i}">
+      <button class="btn-shorter" onclick="addProjectDate(${i})">Add Date</button>
+      <ul class="">
+        ${(p.dates || []).map((d, idx) => `
+          <li class="date-item"
+              draggable="true"
+              ondragstart="dateDragStart(${i}, ${idx})"
+              ondragend="dateDragEnd()"
+              ondragover="event.preventDefault()"
+              ondrop="dateDrop(${i}, ${idx})">
+
+            <strong>${d.type}</strong>: ${formatDateMDY(d.value)}
+
+
+            <button onclick="editProjectDate(${i}, ${idx})"
+                    style="font-size:11px; padding:2px 6px;">✏️</button>
+
+            <button onclick="deleteProjectDate(${i}, ${idx})"
+                    style="font-size:11px; padding:2px 6px;">🗑️</button>
+          </li>
+        `).join('')}
+      </ul>
+      
+    </div>
+
+    <div class="section-header">Member Info</div>
+    <div class="row">
+        <input placeholder="Member name" id="mname-${i}" onkeydown="handleMemberEnter(${i}, event)">
+        <input placeholder="Member email" id="memail-${i}" onkeydown="handleMemberEnter(${i}, event)">
+        <input placeholder="Groups (e.g. Training, Ops)" id="mgroups-${i}" onkeydown="handleMemberEnter(${i}, event)">
+        <button class="btn-shorter" onclick="addMember(${i},
+          document.getElementById('mname-${i}').value,
+          document.getElementById('memail-${i}').value,
+          document.getElementById('mgroups-${i}').value)">
+          Add
+        </button>
+    </div>
+
+    <ul class="small">
+        ${(() => {
+          const grouped = {};
+          const displayName = {};
+
+          (p.members || []).forEach((m, idx) => {
+            const teams = (m.groups || []).length > 0 ? m.groups : ['No Group'];
+            teams.forEach(team => {
+              const key = normalizeGroupKey(team);
+              if (!grouped[key]) {
+                grouped[key] = [];
+                displayName[key] = normalizeGroupName(team);
+              }
+              grouped[key].push({...m, originalIndex: idx});
+            });
+          });
+          
+          return Object.keys(grouped).sort().map(team => `
+            <li><strong>${displayName[team]}</strong> <button onclick="copyGroupEmails(${i}, '${team}')" style="font-size:11px; padding:2px 6px;">Copy Emails</button>
+              <ul>
+                ${grouped[team].map(m => `
+                <li
+                  draggable="true"
+                  ondragstart="memberDragStart(${i}, ${m.originalIndex})"
+                  ondragend="memberDragEnd()"
+                  ondragover="event.preventDefault()"
+                  ondrop="memberDrop(${i}, ${m.originalIndex})"
+                >
+                    ${m.name} (${m.email})
+                    <input type="checkbox" ${m.includeInEmail ? 'checked' : ''} onchange="toggleIncludeInEmail(${i}, ${m.originalIndex})"> Include in Email
+                    <button onclick="copyEmail(${i}, ${m.originalIndex})" style="font-size:11px; padding:2px 6px;">Copy Email</button>
+                    <button onclick="editMember(${i}, ${m.originalIndex})" style="font-size:11px; padding:2px 6px;">✏️</button>
+                    <button onclick="deleteMember(${i}, ${m.originalIndex})" style="font-size:11px; padding:2px 6px;">🗑️</button>
+                  </li>
+                `).join('')}
+              </ul>
+            </li>
+          `).join('');
+        })()}
+    </ul>
+
+    <div class="row">
+      <textarea placeholder="Project notes" onblur="updateField(${i},'notes',this.value)">${p.notes}</textarea>
+    </div>
+
+
+    `;
+
+    container.appendChild(div);
+  });
+}
+
+function toggleArchiveView() {
+  showArchived = !showArchived;
+  render();
+}
+
+
+function exportData() {
+  const data = {
+    projects,
+    exportDate: new Date().toISOString()
+  };
+
+  const blob = new Blob([JSON.stringify(data, null, 2)], {
+    type: 'application/json'
+  });
+
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+
+  const date = new Date().toISOString().replace(/[:.]/g, '-');
+  a.href = url;
+  a.download = `project-tracker-backup-${date}.json`;
+
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// function copyExportText() {
+//   const text = document.getElementById('exportText');
+//   text.select();
+//   navigator.clipboard.writeText(text.value).then(() => alert('Data copied to clipboard!'));
+// }
+
+// function closeExportModal() {
+//   document.getElementById('exportModal').classList.remove('show');
+// }
+
+// function openImportModal() {
+//   document.getElementById('importText').value = '';
+//   document.getElementById('importModal').classList.add('show');
+// }
+
+// function openImportModal() {
+//   if (!confirm('Importing will overwrite all existing projects. Continue?')) {
+//     return;
+//   }
+//   document.getElementById('importFileInput').click();
+// }
+
+function handleImportFile(file) {
+  if (!file) return;
+
+  if (!confirm('Importing this file will overwrite all existing projects. Continue?')) {
+    return;
+  }
+
+  const reader = new FileReader(); // ✅ FIXED
+
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+
+      if (!data.projects || !Array.isArray(data.projects)) {
+        alert('Invalid file format. Missing projects array.');
+        return;
+      }
+
+      projects = data.projects;
+      save();
+      render();
+      showCopyToast('Data imported successfully');
+    } catch (err) {
+      alert('Failed to import file: ' + err.message);
+    }
+  };
+
+  reader.readAsText(file);
+}
+
+function openImportModal() {
+  document.getElementById('importFileInput').value = '';
+  document.getElementById('importFileInput').click();
+}
+
+
+/* ================================
+   TASK MANAGEMENT
+================================ */
+
+let dragTaskProject = null;
+let dragTaskIndex = null;
+
+let dragDisciplineProject = null;
+let dragDisciplineIndex = null;
+
+
+function addProjectTask(projectIndex) {
+  const input = document.getElementById(`taskInput-${projectIndex}`);
+  const text = input.value.trim();
+  if (!text) return;
+
+  projects[projectIndex].tasks.push({ text });
+  input.value = '';
+  save();
+  render();
+}
+
+function deleteProjectTask(projectIndex, taskIndex) {
+  projects[projectIndex].tasks.splice(taskIndex, 1);
+  save();
+  render();
+}
+
+function editProjectTask(projectIndex, taskIndex) {
+  const task = projects[projectIndex].tasks[taskIndex];
+  const next = prompt('Edit task', task.text);
+  if (next === null) return;
+
+  task.text = next.trim() || task.text;
+  save();
+  render();
+}
+
+function taskDragStart(projectIndex, taskIndex) {
+  dragTaskProject = projectIndex;
+  dragTaskIndex = taskIndex;
+}
+
+function taskDragEnd() {
+  dragTaskProject = null;
+  dragTaskIndex = null;
+}
+
+function taskDrop(projectIndex, taskIndex) {
+  if (dragTaskProject !== projectIndex) return;
+
+  const list = projects[projectIndex].tasks;
+  const [task] = list.splice(dragTaskIndex, 1);
+  list.splice(taskIndex, 0, task);
+
+  save();
+  render();
+}
+
+/* ================================
+   PROJECT DATES
+================================ */
+
+let dragDateProject = null;
+let dragDateIndex = null;
+
+function addProjectDate(projectIndex) {
+  const type = document.getElementById(`dateType-${projectIndex}`).value;
+  const value = document.getElementById(`dateValue-${projectIndex}`).value;
+
+  if (!value) return;
+
+  projects[projectIndex].dates.push({ type, value });
+  document.getElementById(`dateValue-${projectIndex}`).value = '';
+  save();
+  render();
+}
+
+function editProjectDate(projectIndex, dateIndex) {
+  const date = projects[projectIndex].dates[dateIndex];
+
+  let type = prompt(
+    "Edit Date Type (OCC Letter, Start Date, Kickoff Meeting, SIT, UAT, PROD, or Blank)",
+    date.type
+  );
+  if (type === null) return;
+
+  type = type.trim();
+  if (!['OCC Letter','Start Date','Kickoff Meeting','SIT','UAT','PROD','Blank'].includes(type)) {
+    alert('Invalid date type.');
+    return;
+  }
+
+  const value = prompt("Edit Date (YYYY-MM-DD)", date.value);
+  if (value === null) return;
+
+  date.type = type;
+  date.value = value.trim() || date.value;
+  save();
+  render();
+}
+
+function deleteProjectDate(projectIndex, dateIndex) {
+  projects[projectIndex].dates.splice(dateIndex, 1);
+  save();
+  render();
+}
+
+function dateDragStart(projectIndex, dateIndex) {
+  dragDateProject = projectIndex;
+  dragDateIndex = dateIndex;
+}
+
+function dateDragEnd() {
+  dragDateProject = null;
+  dragDateIndex = null;
+}
+
+function dateDrop(projectIndex, dateIndex) {
+  if (dragDateProject !== projectIndex) return;
+
+  const list = projects[projectIndex].dates;
+  const [item] = list.splice(dragDateIndex, 1);
+  list.splice(dateIndex, 0, item);
+
+  save();
+  render();
+}
+
+function formatDateMDY(isoDate) {
+  if (!isoDate) return '';
+  const [y, m, d] = isoDate.split('-');
+  return `${parseInt(m,10)}/${parseInt(d,10)}/${y}`;
+}
+
+function memberDragStart(projectIndex, memberIndex) {
+  dragMemberProject = projectIndex;
+  dragMemberIndex = memberIndex;
+}
+
+function memberDragEnd() {
+  dragMemberProject = null;
+  dragMemberIndex = null;
+}
+
+function memberDrop(projectIndex, targetIndex) {
+  if (dragMemberProject !== projectIndex) return;
+  if (dragMemberIndex === targetIndex) return;
+
+  const members = projects[projectIndex].members;
+
+  const [dragged] = members.splice(dragMemberIndex, 1);
+
+  // Adjust index if removing earlier item
+  const adjustedIndex =
+    dragMemberIndex < targetIndex ? targetIndex - 1 : targetIndex;
+
+  members.splice(adjustedIndex, 0, dragged);
+
+  save();
+  render();
+}
+
+/* ================================
+   WBS DRAG & DROP
+================================ */
+
+function wbsDragStart(projectIndex, wbsIndex) {
+  dragWBSProject = projectIndex;
+  dragWBSIndex = wbsIndex;
+}
+
+function wbsDragEnd() {
+  dragWBSProject = null;
+  dragWBSIndex = null;
+}
+
+function wbsDrop(projectIndex, targetIndex) {
+  if (dragWBSProject !== projectIndex) return;
+  if (dragWBSIndex === targetIndex) return;
+
+  const list = projects[projectIndex].wbs;
+  const [item] = list.splice(dragWBSIndex, 1);
+
+  // adjust index if dragging downward
+  const adjustedIndex =
+    dragWBSIndex < targetIndex ? targetIndex - 1 : targetIndex;
+
+  list.splice(adjustedIndex, 0, item);
+
+  save();
+  render();
+}
+
+/* ================================
+   HYPERLINK DRAG & DROP
+================================ */
+
+function linkDragStart(projectIndex, linkIndex) {
+  dragLinkProject = projectIndex;
+  dragLinkIndex = linkIndex;
+}
+
+function linkDragEnd() {
+  dragLinkProject = null;
+  dragLinkIndex = null;
+}
+
+function linkDrop(projectIndex, targetIndex) {
+  if (dragLinkProject !== projectIndex) return;
+  if (dragLinkIndex === targetIndex) return;
+
+  const list = projects[projectIndex].hyperlinks;
+  const [item] = list.splice(dragLinkIndex, 1);
+
+  // adjust index if dragging downward
+  const adjustedIndex =
+    dragLinkIndex < targetIndex ? targetIndex - 1 : targetIndex;
+
+  list.splice(adjustedIndex, 0, item);
+
+  save();
+  render();
+}
+
+function memberOptions(p, selected) {
+  return `
+    <option value="">Unassigned</option>
+    ${(p.members || []).map(m => `
+      <option value="${m.name}" ${m.name === selected ? 'selected' : ''}>
+        ${m.name}
+      </option>
+    `).join('')}
+  `;
+}
+
+
+function addBusOpsDiscipline(projectIndex) {
+  const select = document.getElementById(`busOpsDiscipline-${projectIndex}`);
+  if (!select) return;
+
+  const value = select.value;
+  if (!value) return;
+
+  projects[projectIndex].busOpsDisciplines.push({ type: value });
+  save();
+  render();
+}
+
+function editBusOpsDiscipline(projectIndex, index) {
+  const item = projects[projectIndex].busOpsDisciplines[index];
+
+  const next = prompt(
+    "Edit Discipline (Publications or Training)",
+    item.type
+  );
+
+  if (next === null) return;
+
+  if (!['Publications', 'Training'].includes(next)) {
+    alert('Invalid discipline. Allowed values: Publications, Training.');
+    return;
+  }
+
+  item.type = next;
+  save();
+  render();
+}
+
+function deleteBusOpsDiscipline(projectIndex, index) {
+  projects[projectIndex].busOpsDisciplines.splice(index, 1);
+  save();
+  render();
+}
+
+/* Drag & Drop */
+
+function disciplineDragStart(projectIndex, index) {
+  dragDisciplineProject = projectIndex;
+  dragDisciplineIndex = index;
+}
+
+function disciplineDragEnd() {
+  dragDisciplineProject = null;
+  dragDisciplineIndex = null;
+}
+
+function disciplineDrop(projectIndex, targetIndex) {
+  if (dragDisciplineProject !== projectIndex) return;
+  if (dragDisciplineIndex === targetIndex) return;
+
+  const list = projects[projectIndex].busOpsDisciplines;
+  const [item] = list.splice(dragDisciplineIndex, 1);
+
+  const adjustedIndex =
+    dragDisciplineIndex < targetIndex ? targetIndex - 1 : targetIndex;
+
+  list.splice(adjustedIndex, 0, item);
+
+  save();
+  render();
+}
+
+function enableNameEdit(el) {
+  el.contentEditable = "true";
+  el.focus();
+
+  // Move caret exactly where user double-clicked
+  const range = document.createRange();
+  const sel = window.getSelection();
+  range.selectNodeContents(el);
+  range.collapse(false);
+  sel.removeAllRanges();
+  sel.addRange(range);
+}
+
+function handleNameKey(event, projectIndex, el) {
+  if (event.key === 'Enter') {
+    event.preventDefault();
+    el.blur(); // triggers saveNameEdit
+  }
+}
+
+function saveNameEdit(projectIndex, el) {
+  el.contentEditable = "false";
+
+  const value = el.innerText.trim();
+  if (!value) {
+    el.innerText = projects[projectIndex].name; // revert if empty
+    return;
+  }
+
+  projects[projectIndex].name = value;
+  save();
+}
+
+function enableName2Edit(el) {
+  if (!el || !el.classList) return;
+
+  el.contentEditable = "true";
+  el.classList.add('editing');
+  el.focus();
+
+  // Place caret exactly where user clicked
+  const range = document.createRange();
+  const sel = window.getSelection();
+  range.selectNodeContents(el);
+  range.collapse(false);
+  sel.removeAllRanges();
+  sel.addRange(range);
+}
+``
+
+function handleName2Key(event, projectIndex, el) {
+  if (event.key === 'Enter') {
+    event.preventDefault();
+    el.blur();
+  }
+}
+
+function saveName2Edit(projectIndex, el) {
+  el.contentEditable = "false";
+  el.classList.remove('editing');
+
+  const value = el.innerText.trim();
+
+  if (!value || value === 'Long project name') {
+    el.innerText = projects[projectIndex].name2 || 'Long project name';
+    return;
+  }
+
+  projects[projectIndex].name2 = value;
+  save();
+}
+
+function enableDescriptionEdit(el) {
+  if (!el || !el.classList) return;
+
+  el.contentEditable = "true";
+  el.classList.add('editing');
+  el.focus();
+}
+
+function handleDescriptionKey(event, projectIndex, el) {
+  // Enter saves, Shift+Enter inserts newline
+  if (event.key === 'Enter' && !event.shiftKey) {
+    event.preventDefault();
+    el.blur();
+  }
+}
+
+function saveDescriptionEdit(projectIndex, el) {
+  el.contentEditable = "false";
+  el.classList.remove('editing');
+
+  const value = el.innerText.trim();
+
+  if (!value || value === 'Project objectives / description') {
+    el.innerText =
+      projects[projectIndex].description ||
+      'Project objectives / description';
+    return;
+  }
+
+  projects[projectIndex].description = value;
+  save();
+}
+
+
+normalizeProjects();
+render();
+</script>
+</body>
+</html>
