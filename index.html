@@ -74,6 +74,40 @@ button:active {
 }
 
 /* ================================
+   COPY TOAST (bottom-right)
+================================ */
+.copy-toast {
+  position: fixed;
+  right: 38px;
+  bottom: 18px;
+  z-index: 99999;
+
+  background: rgba(17, 24, 39, 0.92); /* dark slate */
+  color: #fff;
+
+  padding: 10px 12px;
+  border-radius: 12px;
+
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+
+  box-shadow: 0 12px 30px rgba(0,0,0,0.25);
+
+  opacity: 0;
+  transform: translateY(10px);
+  pointer-events: none;
+
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.copy-toast.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+
+/* ================================
    INPUTS
 ================================ */
 input,
@@ -85,6 +119,10 @@ select {
   border-radius: 9px;
   border: 1px solid var(--border-soft);
   background: white;
+}
+
+.top-input{
+  border: 2px solid var(--border-soft);
 }
 
 input:focus,
@@ -110,13 +148,52 @@ textarea {
   margin-bottom: 14px;
 }
 
+/* Top-right "Active projects: X" badge (no gradients) */
 .active-count {
-  font-size: 13px;
-  color: var(--text-muted);
-  background: var(--primary-soft);
-  padding: 6px 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+
+  padding: 7px 16px;
   border-radius: 999px;
+
+  color: #1f2937;
+
+  /* ✅ light blue background */
+  background: #f5faff;
+  border: 3px solid rgba(79, 70, 229, 0.22);
+
+  box-shadow:
+    0 1px 2px rgba(17, 24, 39, 0.08),
+    0 6px 16px rgba(17, 24, 39, 0.08);
+
+  position: relative;
+  top: 23px;
+  right: 6px;
 }
+
+
+/* Optional: emphasize the number only (wrap number in a span in JS/HTML) */
+.active-count .count-number {
+  font-weight: 800;
+  color: var(--primary);
+}
+
+/* Optional hover (nice subtle microinteraction) */
+/*
+.active-count:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    0 3px 14px rgba(17,24,39,0.10),
+    0 0 0 2px rgba(79,70,229,0.14);
+  cursor: default;
+}
+*/
+
 
 .section-header {
   margin-top: 16px;
@@ -140,12 +217,14 @@ textarea {
   flex-direction: column;
   gap: 12px;
   margin-bottom: 18px;
+  border-radius: 9px;
 }
 
 .controls-row {
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
+  border-radius: 9px;
 }
 
 .controls-row.full-width input#projectFilter {
@@ -217,6 +296,19 @@ textarea {
   margin-top: 7px;
 }
 
+/* Project Name 2: keep a clickable area even when empty */
+.project .project-name-secondary {
+  display: inline-block;     /* ✅ required so min-width works */
+  min-width: 220px;          /* ✅ adjust to taste (160–320px) */
+  padding: 2px 6px;          /* gives a nicer hit area */
+  border-radius: 8px;
+}
+
+/* Optional: make it obvious it's editable on hover */
+.project .project-name-secondary:hover {
+  background: rgba(79, 70, 229, 0.06);
+}
+
 /* ================================
    SMALL TEXT
 ================================ */
@@ -224,25 +316,11 @@ textarea {
   font-size: 12px;
 }
 
-.small-bulleted-disciplines{
-  padding-left: 30px;
-}
-
-.small-bulleted-disciplines > li {
-  margin-bottom: 5px;
-}
 
 .row > label{
   font-size:14px;
 }
 
-.task-card {
-  cursor: grab;
-}
-
-.task-card:active {
-  cursor: grabbing;
-}
 
 .date-item {
   cursor: grab;
@@ -288,7 +366,7 @@ textarea {
   margin-top: 13px;
 }
 
-.btn-shorter{
+.btn-shorter {
  padding: 5px 14px;
 }
 
@@ -345,49 +423,248 @@ textarea {
   font-weight: 700;
 }
 
-/* Grid container */
-.status-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 10px;
-  align-items: start; /* keeps fields aligned at top (optional) */
+/* Project Notes: full width */
+.project .project-notes {
+  width: 100%;
+  display: block;
+  flex: 1;              /* helps if the parent row becomes flex */
+  min-height: 110px;    /* optional: makes notes feel roomier */
 }
 
-/* Each field (label wraps text + select) */
+/* Grid container */
+
+/* Status areas: left-stacked flex layout that wraps */
+.status-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start; /* ⬅️ keep everything stacked left */
+  align-items: flex-start;
+  gap: 12px 14px;              /* row gap / column gap */
+}
+
+
+/* Each field block (label wraps text + select) */
 .status-grid > label {
   display: flex;
   flex-direction: column;
-  align-items: center;          /* centers select under the label */
-  justify-content: center;
+  align-items: flex-start;   /* ⬅️ left align */
+  text-align: left;          /* ⬅️ left align label text */
   gap: 6px;
-  text-align: center;           /* centers the label text */
   margin-top: 10px;
+
+  /* Helps create consistent “columns” while still wrapping */
+  min-width: 180px;          /* tweak: 160–220 */
 }
 
-/* Make selects consistent width so they align nicely */
+/* Fixed dropdown width so they don't expand to fill space */
 .status-grid select {
-  width: 100%;
-  max-width: 160px;             /* keep them uniform */
+  width: 170px;     /* tweak: 150–190 */
+  max-width: none;
 }
 
+
+
+.hyperlink-list > li {
+  margin-bottom: 3px;
+}
+
+
+/* Bulleted Classes */
+
+
+/* Comment in and out here */
+
+.bulleted-list{
+  padding-left: 30px;
+}
+
+.bulleted-list >li{
+  margin-bottom: 2px;
+}
+
+
+*/
+
+/* Hyperlink row */
+/* keep bullets + allow inner flex layout */
+.project .hyperlink-item {
+  list-style: disc;
+}
+
+/* flex ONLY the contents inside the li */
+.project .hyperlink-content, .project .task-content, .project .busops-content {
+  display: flex;
+  align-items: center;
+  gap: 6px; /* ✅ spacing between link + buttons */
+}
+
+.project .task-content > button {
+  position: relative;
+  top: 1px;
+}
+
+
+.project .small-copy{
+  padding: 2px 20px;
+}
+
+/* Make sure list bullets show */
+.project .task-list {
+  margin: 8px 0 0;
+  padding-left: 30px;           /* controls indent */
+  list-style: disc;
+}
+
+
+/* Control bullet size for tasks */
+.project .task-list > li::marker {
+  font-size: 12px;
+}
+
+/* Archived projects: darker, grayer, clearly "inactive" */
+.project.archive {
+  /* darker gray background shading */
+  background: #EEF1F2;                 /* soft gray */
+  border: 1px solid #D6DBE0;           /* slightly stronger border */
+
+  /* override the active indigo outline */
+  outline: 2px solid rgba(100, 116, 139, 0.55);  /* slate outline */
+  
+  /* override the active glow */
+  box-shadow:
+    0 0 0 3px rgba(148, 163, 184, 0.20),         /* neutral ring instead of indigo */
+    0 1px 3px rgba(0,0,0,0.06),
+    0 8px 18px rgba(0,0,0,0.06);
+
+  /* slightly muted */
+  opacity: 0.92;
+  filter: saturate(0.85);
+}
+
+/* this is the font size of the tasks which are larger than normal*/
+.task-content > span{
+  font-size: 15px;
+}
+
+.task-card::marker{
+  font-size: 12px;
+}
+
+/* ================================
+   TOOLTIP (pure CSS)
+================================ */
+.has-tooltip {
+  position: relative; /* anchor for tooltip */
+}
+
+/* Tooltip bubble */
+.has-tooltip::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 10px);
+  transform: translateX(-50%);
+
+  background: rgba(17, 24, 39, 0.92); /* near-black */
+  color: #fff;
+  padding: 7px 10px;
+  border-radius: 10px;
+
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.12s ease, transform 0.12s ease;
+
+  box-shadow: 0 10px 24px rgba(0,0,0,0.25);
+  z-index: 9999;
+}
+
+/* Tooltip little arrow */
+.has-tooltip::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 4px);
+  transform: translateX(-50%);
+
+  border: 6px solid transparent;
+  border-bottom-color: rgba(17, 24, 39, 0.92);
+
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.12s ease, transform 0.12s ease;
+  z-index: 9999;
+}
+
+/* Show tooltip on hover + keyboard focus */
+.has-tooltip:hover::after,
+.has-tooltip:hover::before,
+.has-tooltip:focus-visible::after,
+.has-tooltip:focus-visible::before {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* Tiny lift when appearing */
+.has-tooltip:hover::after,
+.has-tooltip:focus-visible::after {
+  transform: translateX(-50%) translateY(2px);
+}
+
+/* Meeting duration select a bit tighter */
+.meeting-duration {
+  width: 120px;
+  padding: 6px 8px;
+}
 
 </style>
 </head>
 <body>
 <div class="header-row">
   <h1>Project Management Tracker</h1>
-  <div id="activeCount" class="active-count">Active projects: 0</div>
+  <div id="activeCount" class="active-count">Active Projects: 0</div>
 </div>
 
 <div class="controls">
   <div class="controls-row">
-    <input id="newProjectName" placeholder="New project name" onkeydown="if(event.key==='Enter'){ event.preventDefault(); addProject(); }" />
+    <input id="newProjectName" class="top-input" placeholder="New project name" onkeydown="if(event.key==='Enter'){ event.preventDefault(); addProject(); }" />
     <button onclick="addProject()">Add Project</button>
-    <button onclick="toggleArchiveView()">Show/Hide Archived</button>
+
+    <button
+      id="toggleFilterBtn"
+      class="has-tooltip"
+      data-tooltip="Showing: Active projects only"
+      onclick="toggleFilterMode()"
+    >
+      Show Archived Only
+    </button>
+
+    <button
+      id="showAllBtn"
+      class="has-tooltip"
+      data-tooltip="Showing: All projects (Active + Archived)"
+      onclick="showAllProjects()"
+    >
+      Show All
+    </button>
+
+    <button
+      id="showOrpBtn"
+      class="has-tooltip"
+      data-tooltip="Click to show ORP-related projects only"
+      onclick="showOrpProjects()"
+    >
+      Show ORP Related
+    </button>
+
     <button onclick="exportData()">Export Data</button>
     <button onclick="openImportModal()">Import Data</button>
   </div>
-  <div class="controls-row full-width">
+  <div class="controls-row full-width top-input">
     <input id="projectFilter" placeholder="Filter projects..." oninput="render()" />
   </div>
 </div>
@@ -402,7 +679,8 @@ textarea {
 />
 <script>
 let projects = JSON.parse(localStorage.getItem('projects') || '[]');
-let showArchived = false;
+// viewMode: 'active' | 'archived' | 'all' | 'orp'
+let viewMode = 'active';
 let dragIndex = null;
 let dragMember = null;
 let dragTask = null;
@@ -413,8 +691,628 @@ let dragWBSIndex = null;
 let dragLinkProject = null;
 let dragLinkIndex = null;
 
-function save() {
-  localStorage.setItem('projects', JSON.stringify(projects));
+
+function render() {
+  const filter = document.getElementById('projectFilter').value.trim().toLowerCase();
+
+  document.getElementById('activeCount').innerText =
+    `Active Projects: ${projects.filter(p => !p.archived).length}`;
+
+  projects.forEach(p => {
+    if (!Array.isArray(p.members)) p.members = [];
+    if (!Array.isArray(p.wbs)) p.wbs = [];
+    if (!Array.isArray(p.hyperlinks)) p.hyperlinks = [];
+    if (!Array.isArray(p.tasks)) p.tasks = [];
+    if (!Array.isArray(p.dates)) p.dates = [];
+    if (typeof p.orpRelated !== 'boolean') p.orpRelated = false
+    
+    p.members.forEach(m => {
+      if (!Array.isArray(m.groups)) m.groups = [];
+    });
+  });
+
+
+  const container = document.getElementById('projectList');
+  container.innerHTML = '';
+
+  projects.forEach((_, i) => {
+  const p = projects[i]; // ✅ force fresh state reference
+    // Filter based on viewMode
+    if (viewMode === 'active' && p.archived) return;
+    if (viewMode === 'archived' && !p.archived) return;
+    if (viewMode === 'orp' && !p.orpRelated) return;
+    // viewMode === 'all' shows everything
+
+    if (filter && !p.name.toLowerCase().includes(filter)) return;
+
+    const div = document.createElement('div');
+    div.className = 'project' + (p.archived?' archive':'');
+    div.draggable = true;
+
+    div.ondragstart = ()=>{ dragIndex=i; div.classList.add('dragging'); };
+    div.ondragend = ()=> div.classList.remove('dragging');
+    div.ondragover = e=>e.preventDefault();
+    div.ondrop = ()=>{
+      const temp = projects[dragIndex];
+      projects.splice(dragIndex,1);
+      projects.splice(i,0,temp);
+      save(); render();
+    };
+div.innerHTML = `
+  <div
+    style="
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+    "
+  >
+    <!-- Project Name -->
+    <strong
+      contenteditable="false"
+      class="project-name"
+      ondblclick="enableNameEdit(this)"
+      onkeydown="handleNameKey(event, ${i}, this)"
+      onblur="saveNameEdit(${i}, this)"
+      style="white-space: nowrap; cursor: text;"
+    >
+      ${p.name}
+    </strong>
+
+    <!-- Separator -->
+    <span style="color:var(--border-soft); font-weight:600;">│</span>
+
+    <!-- Project Name 2 -->
+    <strong
+      contenteditable="false"
+      class="project-name project-name-secondary"
+      ondblclick="enableName2Edit(this)"
+      onkeydown="handleName2Key(event, ${i}, this)"
+      onblur="saveName2Edit(${i}, this)"
+      style="white-space:nowrap;"
+    >
+      ${p.name2 || ''}
+    </strong>
+
+    <!-- FLEX SPACER -->
+    <div style="flex: 1;"></div>
+
+    <!-- Active Indicator -->
+    <span
+      class="small"
+      style="
+        font-size:14px;
+        white-space:nowrap;
+        padding:4px 11px;
+        border-radius:999px;
+        font-weight:600;
+        background:${p.archived
+          ? 'rgba(220,38,38,0.15)'
+          : 'rgba(22,163,74,0.15)'};
+        color:${p.archived
+          ? '#dc2626'
+          : '#16a34a'};
+      "
+    >
+      ${p.archived ? 'Archived' : 'Active'}
+    </span>
+
+
+    <!-- Separator -->
+    <span style="color:var(--border-soft); font-weight:600;">│</span>
+
+    <!-- Archive/Delete Buttons -->
+    <div style="display:flex; gap:10px; white-space:nowrap;">
+
+      <!-- Archive/Restore -->
+      <button onclick="toggleArchive(${i})"
+              style="font-size:13px; padding:5px 11px;">
+        ${p.archived ? 'Restore' : 'Archive'}
+      </button>
+
+      <!-- Delete -->
+      <button onclick="deleteProject(${i})"
+              style="font-size:13px; padding:5px 11px;">
+        Delete
+      </button>
+
+    </div>
+
+  </div>
+
+  <!-- Project Description -->
+  <strong
+    contenteditable="false"
+    class="project-description"
+    ondblclick="enableDescriptionEdit(this)"
+    onkeydown="handleDescriptionKey(event, ${i}, this)"
+    onblur="saveDescriptionEdit(${i}, this)"
+  >
+    ${p.description || 'Project objectives / description'}
+  </strong>
+
+
+  <!-- BusOps Disciplines -->
+  <div class="row">
+      <div class="section-header" id="busops-disciplines">BusOps Disciplines</div>
+  <div class="row">
+
+  <div class="busops-row">
+
+    <!-- Discipline Selection -->
+    <select id="busOpsDiscipline-${i}">
+      <option value="">Select</option>
+      <option>None</option>
+      <option>Publications</option>
+      <option>Training</option>
+    </select>
+
+    <!-- Add Discipline -->
+    <button class="btn-shorter" onclick="addBusOpsDiscipline(${i})">
+      Add Discipline
+    </button>
+
+    
+    <label class="chk-pill" style="display:flex; align-items:center; gap:6px;">
+      <!-- ConfirmedCheckbox -->
+      <input
+        type="checkbox"
+        ${p.confirmedBusOpsDisciplines ? 'checked' : ''}
+        onchange="
+          updateField(${i}, 'confirmedBusOpsDisciplines', this.checked);
+          render();
+        "
+      >
+      Confirmed BusOps Disciplines
+    </label>
+
+    <!-- Confirmation Date -->
+    <label style="display:flex; align-items:center; gap:6px;">
+      <span class="small">Date: </span>
+      <input
+        type="date"
+        ${!p.confirmedBusOpsDisciplines ? 'disabled' : ''}
+        value="${p.busOpsDisciplineConfirmedDate || ''}"
+        onchange="updateField(${i}, 'busOpsDisciplineConfirmedDate', this.value)"
+      >
+    </label>
+
+    <!-- Confirmed By -->
+    <label style="display:flex; align-items:center; gap:6px;">
+      <span class="small">Confirmed By</span>
+      <select
+        ${!p.confirmedBusOpsDisciplines ? 'disabled' : ''}
+        onchange="updateField(${i}, 'busOpsDisciplineConfirmedBy', this.value)"
+      >
+        ${memberOptions(p, p.busOpsDisciplineConfirmedBy)}
+      </select>
+    </label>
+  </div>
+
+
+  <!-- Bulleted Disciplines -->
+  <ul class="small small-bulleted-disciplines bulleted-list">
+    ${(p.busOpsDisciplines || []).map((d, idx) => `
+      <li
+        draggable="true"
+        ondragstart="disciplineDragStart(${i}, ${idx})"
+        ondragend="disciplineDragEnd()"
+        ondragover="event.preventDefault()"
+        ondrop="disciplineDrop(${i}, ${idx})"
+      >
+      <span class="busops-content">
+        ${d.type}
+
+        <button onclick="editBusOpsDiscipline(${i}, ${idx})"
+                style="font-size:11px; padding:2px 6px;">
+          ✏️
+        </button>
+
+        <button onclick="deleteBusOpsDiscipline(${i}, ${idx})"
+                style="font-size:11px; padding:2px 6px;">
+          🗑️
+        </button>
+      </span>
+      </li>
+    `).join('')}
+  </ul>
+
+  <!-- Overall Project Status -->
+  <div class="section-header">Overall Project Status</div>
+
+  <div class="row status-grid">
+
+    <label>
+      Project Phase
+      <select onchange="updateField(${i}, 'projectPhase', this.value)">
+        <option value="" ${!p.projectPhase ? 'selected' : ''}>Select</option>
+        ${['Initiating','Planning','Executing','Delivering','Closing'].map(ph => `
+          <option value="${ph}" ${p.projectPhase === ph ? 'selected' : ''}>
+            ${ph}
+          </option>
+        `).join('')}
+      </select>
+    </label>
+
+    <label>
+      Project State
+      <select onchange="updateField(${i}, 'state', this.value)">
+        <option value="" ${!p.state ? 'selected' : ''}>Select</option>
+        ${['Pending','Open','Work in Progress','Awaiting Approval', 'Closed Complete'].map(s => `
+          <option value="${s}" ${p.state === s ? 'selected' : ''}>${s}</option>
+        `).join('')}
+      </select>
+    </label>
+
+    <label>
+      Task Stage
+      <select onchange="updateField(${i}, 'taskStage', this.value)">
+        <option value="" ${!p.taskStage ? 'selected' : ''}>Select</option>
+        ${['1-Inception','2-Elaboration','3-Construction','4-Transition'].map(s => `
+          <option value="${s}" ${p.taskStage === s ? 'selected' : ''}>${s}</option>
+        `).join('')}
+      </select>
+    </label>
+
+
+
+
+  </div>
+
+  <!-- Project Leads -->
+  <div class="section-header">Project Leads</div>
+  <div class="row status-grid">
+    <label>
+      Primary Vendor
+      <select onchange="updateField(${i}, 'primaryVendor', this.value)">
+        <option value="">Select</option>
+        <option value="ITMO" ${p.primaryVendor === 'ITMO' ? 'selected' : ''}>ITMO</option>
+        <option value="BusOps" ${p.primaryVendor === 'BusOps' ? 'selected' : ''}>BusOps</option>
+      </select>
+    </label>
+
+    <label>ITMO PM
+      <select onchange="updateField(${i}, 'itmoPM', this.value)">
+        ${memberOptions(p, p.itmoPM)}
+      </select>
+    </label>
+
+    <label>BusOps PM
+      <select onchange="updateField(${i}, 'busOpsPM', this.value)">
+        ${memberOptions(p, p.busOpsPM)}
+      </select>
+    </label>
+
+    <label>Program Requester
+      <select onchange="updateField(${i}, 'programRequester', this.value)">
+        ${memberOptions(p, p.programRequester)}
+      </select>
+    </label>
+
+    <label>IT Analyst
+      <select onchange="updateField(${i}, 'itAnalyst', this.value)">
+        ${memberOptions(p, p.itAnalyst)}
+      </select>
+    </label>
+
+    <label>CA‑MMIS Manager
+      <select onchange="updateField(${i}, 'cammiManager', this.value)">
+        ${memberOptions(p, p.cammiManager)}
+      </select>
+    </label>
+
+    <label>Business Analyst
+      <select onchange="updateField(${i}, 'businessAnalyst', this.value)">
+        ${memberOptions(p, p.businessAnalyst)}
+      </select>
+    </label>
+
+    <label>Test Analyst
+      <select onchange="updateField(${i}, 'testAnalyst', this.value)">
+        ${memberOptions(p, p.testAnalyst)}
+      </select>
+    </label>
+  </div>
+
+  <!-- Checkboxes -->
+  <div class="section-header">Checkboxes</div>
+  <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+
+  <label class="chk-pill" style="display:flex; align-items:center; gap:6px;">
+    <input
+      type="checkbox"
+      ${p.weeklyMeeting ? 'checked' : ''}
+      onchange="
+        updateField(${i}, 'weeklyMeeting', this.checked);
+        render();
+      "
+    >
+    Weekly Meeting
+  </label>
+
+<div class="row" style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+
+  <!-- Weekly Meeting + Day + Time -->
+  <div style="display:flex; align-items:center; gap:8px;">
+
+
+    <select
+      ${!p.weeklyMeeting ? 'disabled' : ''}
+      onchange="updateField(${i}, 'weeklyMeetingDay', this.value)">
+      <option value="">Day</option>
+      ${['Monday','Tuesday','Wednesday','Thursday','Friday'].map(d => `
+        <option value="${d}" ${p.weeklyMeetingDay === d ? 'selected' : ''}>${d}</option>
+      `).join('')}
+    </select>
+
+    <span class="small">at</span>
+
+    <input
+      type="time"
+      ${!p.weeklyMeeting ? 'disabled' : ''}
+      value="${p.weeklyMeetingTime || ''}"
+      onchange="updateField(${i}, 'weeklyMeetingTime', this.value)">
+
+    <span class="small">${p.weeklyMeetingTimezone || 'PST'}</span>
+
+    <!-- ✅ NEW: Meeting length -->
+    <select
+      ${!p.weeklyMeeting ? 'disabled' : ''}
+      onchange="updateField(${i}, 'weeklyMeetingDuration', this.value)">
+      ${[
+        {v: 15,  t: '15 mins'},
+        {v: 30,  t: '30 mins'},
+        {v: 45,  t: '45 mins'},
+        {v: 60,  t: '1 hour'},
+        {v: 90,  t: '1.5 hours'},
+        {v: 120, t: '2 hours'}
+      ].map(opt => `
+        <option value="${opt.v}" ${String(p.weeklyMeetingDuration || 60) === String(opt.v) ? 'selected' : ''}>
+          (${opt.t})
+        </option>
+      `).join('')}
+    </select>
+
+    <span class="small">at</span>
+
+  </div>
+
+  <!-- Skipped SNOW Tasks -->
+  <label class="chk-pill">
+    <input
+      type="checkbox"
+      ${p.skippedAllTasks ? 'checked' : ''}
+      onchange="updateField(${i}, 'skippedAllTasks', this.checked)">
+    Skipped All SNOW Tasks
+  </label>
+
+  <!-- ORP Related -->
+  <label class="chk-pill">
+    <input
+      type="checkbox"
+      ${p.orpRelated ? 'checked' : ''}
+      onchange="updateField(${i}, 'orpRelated', this.checked)">
+    ORP Related Project
+  </label>
+
+</div>
+</div>
+</div>
+
+      <!-- WBS Codes -->
+      <div class="row"></div>
+      <div class="section-header">WBS Codes</div>
+      <div class="row">
+        <select id="wbsType-${i}">
+          <option selected>Project</option>
+          <option>Assessment</option>
+          <option>T&M</option>
+        </select>
+        <input placeholder="WBS Code" id="wbsCode-${i}">
+        <button class="btn-shorter" onclick="addWBS(${i})">Add WBS</button>
+      </div>
+
+      <ul class="small bulleted-list">
+        ${(p.wbs || []).map((w, idx) => `
+          <li
+            draggable="true"
+            class="wbs-item"
+            ondragstart="wbsDragStart(${i}, ${idx})"
+            ondragend="wbsDragEnd()"
+            ondragover="event.preventDefault()"
+            ondrop="wbsDrop(${i}, ${idx})"
+          >
+            ${w.type}: ${w.code}
+
+            <button onclick="copyWBS('${w.code}')"
+                    style="font-size:11px; padding:2px 6px;">Copy</button>
+
+            <button onclick="editWBS(${i}, ${idx})"
+                    style="font-size:11px; padding:2px 6px;">✏️</button>
+
+            <button onclick="deleteWBS(${i}, ${idx})"
+                    style="font-size:11px; padding:2px 6px;">🗑️</button>
+          </li>
+        `).join('')}
+      </ul>
+
+      <!-- Hyperlinks -->
+      <div class="section-header">Hyperlinks</div> 
+      <div class="row">
+        <select id="linkType-${i}">
+          <option value="">Select</option>
+          <option>Gainwell SharePoint</option>
+          <option>DHCS SNOW Link</option>
+        </select>
+        <input placeholder="Hyperlink URL" id="linkUrl-${i}">
+        <button class="btn-shorter" onclick="addHyperlink(${i})">Add Link</button>
+      </div>
+
+      <ul class="small bulleted-list">
+        
+          ${(p.hyperlinks || []).map((l, idx) => `
+            <li
+              draggable="true"
+              class=""
+              ondragstart="linkDragStart(${i}, ${idx})"
+              ondragend="linkDragEnd()"
+              ondragover="event.preventDefault()"
+              ondrop="linkDrop(${i}, ${idx})"
+            >
+              <span class="hyperlink-content">
+                <a href="${l.url}" target="_blank">${l.type}</a>
+
+                <button class="small-copy" onclick="copyHyperlink('${l.url}')"
+                        style="font-size:11px; padding:2px 8px;"><span style="position:relative; top: 1px;">⧉</span></button>
+
+                <button onclick="editHyperlink(${i}, ${idx})"
+                        style="font-size:11px; padding:2px 6px;">✏️</button>
+
+                <button onclick="deleteHyperlink(${i}, ${idx})"
+                        style="font-size:11px; padding:2px 6px;">🗑️</button>
+              </span>
+            </li>
+          `).join('')}
+      </ul>
+
+      <!-- Tasks -->
+      <div class="section-header">Tasks</div>
+      <div class="row">
+        <input class="add-task-input"
+          placeholder="Add task"
+          id="taskInput-${i}"
+          onkeydown="if(event.key==='Enter'){event.preventDefault(); addProjectTask(${i})}"
+        >
+        <button class="btn-shorter" onclick="addProjectTask(${i})">Add Task</button>
+      </div>
+
+      <ul class="bulleted-list">
+        ${(p.tasks || []).map((t, idx) => `
+          <li class="task-card"
+              draggable="true"
+              ondragstart="taskDragStart(${i}, ${idx})"
+              ondragend="taskDragEnd()"
+              ondragover="event.preventDefault()"
+              ondrop="taskDrop(${i}, ${idx})">
+
+            <span class="task-content">
+              <span>${t.text}</span>
+
+              <button onclick="editProjectTask(${i}, ${idx})"
+                      style="font-size:11px; padding:2px 6px;">✏️</button>
+
+              <button onclick="deleteProjectTask(${i}, ${idx})"
+                      style="font-size:11px; padding:2px 6px;">🗑️</button>
+            </span>
+          </li>
+        `).join('')}
+      </ul>
+
+    <!-- Dates -->
+    <div class="section-header">Dates</div>
+    <div class="row">
+      <select id="dateType-${i}">
+        <option value="">Select</option>
+        <option>OCC Letter</option>
+        <option>Start Date</option>
+        <option>End Date</option
+        <option>Kickoff Meeting</option>
+        <option>SIT</option>
+        <option>UAT</option>
+        <option>PROD</option>
+      </select>
+
+      <input type="date" id="dateValue-${i}">
+      <button class="btn-shorter" onclick="addProjectDate(${i})">Add Date</button>
+      <ul class="">
+        ${(p.dates || []).map((d, idx) => `
+          <li class="date-item"
+              draggable="true"
+              ondragstart="dateDragStart(${i}, ${idx})"
+              ondragend="dateDragEnd()"
+              ondragover="event.preventDefault()"
+              ondrop="dateDrop(${i}, ${idx})">
+
+            <strong>${d.type}</strong>: ${formatDateMDY(d.value)}
+
+
+            <button onclick="editProjectDate(${i}, ${idx})"
+                    style="font-size:11px; padding:2px 6px;">✏️</button>
+
+            <button onclick="deleteProjectDate(${i}, ${idx})"
+                    style="font-size:11px; padding:2px 6px;">🗑️</button>
+          </li>
+        `).join('')}
+      </ul>
+      
+    </div>
+
+    <div class="section-header">Member Info</div>
+    <div class="row">
+        <input placeholder="Member name" id="mname-${i}" onkeydown="handleMemberEnter(${i}, event)">
+        <input placeholder="Member email" id="memail-${i}" onkeydown="handleMemberEnter(${i}, event)">
+        <input placeholder="Groups (e.g. Training, Ops)" id="mgroups-${i}" onkeydown="handleMemberEnter(${i}, event)">
+        <button class="btn-shorter" onclick="addMember(${i},
+          document.getElementById('mname-${i}').value,
+          document.getElementById('memail-${i}').value,
+          document.getElementById('mgroups-${i}').value)">
+          Add
+        </button>
+    </div>
+
+    <ul class="small bulleted-header">
+        ${(() => {
+          const grouped = {};
+          const displayName = {};
+
+          (p.members || []).forEach((m, idx) => {
+            const teams = (m.groups || []).length > 0 ? m.groups : ['No Group'];
+            teams.forEach(team => {
+              const key = normalizeGroupKey(team);
+              if (!grouped[key]) {
+                grouped[key] = [];
+                displayName[key] = normalizeGroupName(team);
+              }
+              grouped[key].push({...m, originalIndex: idx});
+            });
+          });
+          
+          return Object.keys(grouped).sort().map(team => `
+            <li><strong>${displayName[team]}</strong> <button onclick="copyGroupEmails(${i}, '${team}')" style="font-size:11px; padding:2px 6px;">Copy Emails</button>
+              <ul class="bulleted-list">
+                ${grouped[team].map(m => `
+                <li
+                  draggable="true"
+                  ondragstart="memberDragStart(${i}, ${m.originalIndex})"
+                  ondragend="memberDragEnd()"
+                  ondragover="event.preventDefault()"
+                  ondrop="memberDrop(${i}, ${m.originalIndex})"
+                >
+                    ${m.name} (${m.email})
+                    <input type="checkbox" ${m.includeInEmail ? 'checked' : ''} onchange="toggleIncludeInEmail(${i}, ${m.originalIndex})"> Include in Email
+                    <button onclick="copyEmail(${i}, ${m.originalIndex})" style="font-size:11px; padding:2px 6px;">Copy Email</button>
+                    <button onclick="editMember(${i}, ${m.originalIndex})" style="font-size:11px; padding:2px 6px;">✏️</button>
+                    <button onclick="deleteMember(${i}, ${m.originalIndex})" style="font-size:11px; padding:2px 6px;">🗑️</button>
+                  </li>
+                `).join('')}
+              </ul>
+            </li>
+          `).join('');
+        })()}
+    </ul>
+
+    <div class="row">
+      <textarea class="project-notes"
+                placeholder="Project notes"
+                onblur="updateField(${i},'notes',this.value)">${p.notes}</textarea>
+    </div>
+
+
+
+    `;
+
+    container.appendChild(div);
+  });
 }
 
 function addProject() {
@@ -428,6 +1326,7 @@ function addProject() {
     weeklyMeeting:false,
     weeklyMeetingDay:'',
     weeklyMeetingTime:'',
+    weeklyMeetingDuration: '',
     weeklyMeetingTimezone:'PST',
     skippedAllTasks:false,
     orpRelated:false,
@@ -438,7 +1337,7 @@ function addProject() {
     tasks:[],
     notes:'',
     primaryVendor: '',
-    projectStatus: 'Pending',
+    taskStage: '',
     itmoPM: '',
     busOpsPM: '',
     programRequester: '',
@@ -449,14 +1348,45 @@ function addProject() {
     busOpsDisciplines: [],
     confirmedBusOpsDisciplines: false,
     busOpsDisciplineConfirmedDate: '',
-    busOpsDisciplineConfirmedBy: ''
-
-
+    busOpsDisciplineConfirmedBy: '',
+    projectPhase: ''
   });
   document.getElementById('newProjectName').value = '';
   save();
   render();
 }
+
+function normalizeProjects() {
+  projects.forEach(p => {
+    // Ensure members array exists
+    if (!Array.isArray(p.members)) p.members = [];
+
+    // Role fields
+    p.primaryVendor ??= '';
+    p.taskStage ??= '';
+    p.itmoPM ??= '';
+    p.busOpsPM ??= '';
+    p.programRequester ??= '';
+    p.itAnalyst ??= '';
+    p.cammiManager ??= '';
+    p.businessAnalyst ??= '';
+    p.testAnalyst ??= '';
+    // project fields
+    p.name2 ??= '';
+    p.busOpsDisciplines ??= [];
+    p.confirmedBusOpsDisciplines ??= false;
+    p.busOpsDisciplineConfirmedDate ??= '';
+    p.busOpsDisciplineConfirmedBy ??= '';
+    p.projectPhase ??= '';
+  });
+
+  save();
+}
+
+function save() {
+  localStorage.setItem('projects', JSON.stringify(projects));
+}
+
 
 function deleteProject(i) {
   projects.splice(i,1);
@@ -575,20 +1505,23 @@ function editMember(projectIndex, memberIndex) {
 function copyEmail(projectIndex, memberIndex) {
   const member = projects[projectIndex].members[memberIndex];
   if (!member || !member.email) return;
-  navigator.clipboard.writeText(member.email).then(() => {
-    showCopyToast('Email copied');
-  });
+
+  navigator.clipboard.writeText(member.email)
+    .then(() => showCopyToast('Email copied'))
+    .catch(() => showCopyToast('Copy failed'));
 }
+``
 
 function copyGroupEmails(projectIndex, group) {
   const key = normalizeGroupKey(group);
   const members = projects[projectIndex].members.filter(m =>
     (m.groups || []).some(g => normalizeGroupKey(g) === key) && m.includeInEmail
   );
+
   const emails = members.map(m => m.email).join('; ');
-  navigator.clipboard.writeText(emails).then(() => {
-    showCopyToast('Group emails copied');
-  });
+  navigator.clipboard.writeText(emails)
+    .then(() => showCopyToast('Group emails copied'))
+    .catch(() => showCopyToast('Copy failed'));
 }
 
 
@@ -612,10 +1545,11 @@ function showCopyToast(message = 'Copied!') {
 }
 
 function copyWBS(code) {
-  navigator.clipboard.writeText(code).then(() => {
-    showCopyToast('WBS code copied');
-  });
+  navigator.clipboard.writeText(code)
+    .then(() => showCopyToast('WBS code copied'))
+    .catch(() => showCopyToast('Copy failed'));
 }
+
 
 function addWBS(projectIndex) {
   const type = document.getElementById(`wbsType-${projectIndex}`).value;
@@ -685,605 +1619,11 @@ function deleteHyperlink(projectIndex, linkIndex) {
 }
 
 function copyHyperlink(url) {
-  navigator.clipboard.writeText(url).then(() => {
-    showCopyToast('URL copied');
-  });
+  navigator.clipboard.writeText(url)
+    .then(() => showCopyToast('URL copied'))
+    .catch(() => showCopyToast('Copy failed'));
 }
 
-function normalizeProjects() {
-  projects.forEach(p => {
-    // Ensure members array exists
-    if (!Array.isArray(p.members)) p.members = [];
-
-    // Role fields
-    p.primaryVendor ??= '';
-    p.projectStatus ??= 'Pending';
-    p.itmoPM ??= '';
-    p.busOpsPM ??= '';
-    p.programRequester ??= '';
-    p.itAnalyst ??= '';
-    p.cammiManager ??= '';
-    p.businessAnalyst ??= '';
-    p.testAnalyst ??= '';
-    // project fields
-    p.name2 ??= '';
-    p.busOpsDisciplines ??= [];
-    p.confirmedBusOpsDisciplines ??= false;
-    p.busOpsDisciplineConfirmedDate ??= '';
-    p.busOpsDisciplineConfirmedBy ??= '';
-  });
-
-  save();
-}
-
-function render() {
-  const filter = document.getElementById('projectFilter').value.trim().toLowerCase();
-
-  document.getElementById('activeCount').innerText =
-    `Active projects: ${projects.filter(p => !p.archived).length}`;
-
-  projects.forEach(p => {
-    if (!Array.isArray(p.members)) p.members = [];
-    if (!Array.isArray(p.wbs)) p.wbs = [];
-    if (!Array.isArray(p.hyperlinks)) p.hyperlinks = [];
-    if (!Array.isArray(p.tasks)) p.tasks = [];
-    if (!Array.isArray(p.dates)) p.dates = [];
-    if (typeof p.orpRelated !== 'boolean') p.orpRelated = false
-    
-    p.members.forEach(m => {
-      if (!Array.isArray(m.groups)) m.groups = [];
-    });
-  });
-
-
-  const container = document.getElementById('projectList');
-  container.innerHTML = '';
-
-  projects.forEach((_, i) => {
-  const p = projects[i]; // ✅ force fresh state reference
-    if (p.archived && !showArchived) return;
-    if (filter && !p.name.toLowerCase().includes(filter)) return;
-
-    const div = document.createElement('div');
-    div.className = 'project' + (p.archived?' archive':'');
-    div.draggable = true;
-
-    div.ondragstart = ()=>{ dragIndex=i; div.classList.add('dragging'); };
-    div.ondragend = ()=> div.classList.remove('dragging');
-    div.ondragover = e=>e.preventDefault();
-    div.ondrop = ()=>{
-      const temp = projects[dragIndex];
-      projects.splice(dragIndex,1);
-      projects.splice(i,0,temp);
-      save(); render();
-    };
-div.innerHTML = `
-  <div
-    style="
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      width: 100%;
-    "
-  >
-    <!-- Project Name -->
-    <strong
-      contenteditable="false"
-      class="project-name"
-      ondblclick="enableNameEdit(this)"
-      onkeydown="handleNameKey(event, ${i}, this)"
-      onblur="saveNameEdit(${i}, this)"
-      style="white-space: nowrap; cursor: text;"
-    >
-      ${p.name}
-    </strong>
-
-    <!-- Separator -->
-    <span style="color:var(--border-soft); font-weight:600;">│</span>
-
-    <!-- Project Name 2 -->
-    <strong
-      contenteditable="false"
-      class="project-name project-name-secondary"
-      ondblclick="enableName2Edit(this)"
-      onkeydown="handleName2Key(event, ${i}, this)"
-      onblur="saveName2Edit(${i}, this)"
-      style="white-space:nowrap;"
-    >
-      ${p.name2 || ''}
-    </strong>
-
-    <!-- FLEX SPACER -->
-    <div style="flex: 1;"></div>
-
-    <!-- Active Indicator -->
-    <span
-      class="small"
-      style="
-        white-space:nowrap;
-        padding:3px 8px;
-        border-radius:999px;
-        font-weight:600;
-        background:${p.archived
-          ? 'rgba(220,38,38,0.15)'
-          : 'rgba(22,163,74,0.15)'};
-        color:${p.archived
-          ? '#dc2626'
-          : '#16a34a'};
-      "
-    >
-      ${p.archived ? 'Archived' : 'Active'}
-    </span>
-
-
-    <!-- Separator -->
-    <span style="color:var(--border-soft); font-weight:600;">│</span>
-
-    <!-- Archive/Delete Buttons -->
-    <div style="display:flex; gap:6px; white-space:nowrap;">
-
-      <!-- Archive/Restore -->
-      <button onclick="toggleArchive(${i})"
-              style="font-size:11px; padding:4px 8px;">
-        ${p.archived ? 'Restore' : 'Archive'}
-      </button>
-
-      <!-- Delete -->
-      <button onclick="deleteProject(${i})"
-              style="font-size:11px; padding:4px 8px;">
-        Delete
-      </button>
-
-    </div>
-
-  </div>
-
-  <!-- Project Description -->
-  <strong
-    contenteditable="false"
-    class="project-description"
-    ondblclick="enableDescriptionEdit(this)"
-    onkeydown="handleDescriptionKey(event, ${i}, this)"
-    onblur="saveDescriptionEdit(${i}, this)"
-  >
-    ${p.description || 'Project objectives / description'}
-  </strong>
-
-
-  <!-- BusOps Disciplines -->
-  <div class="row">
-      <div class="section-header" id="busops-disciplines">BusOps Disciplines</div>
-  <div class="row">
-
-  <div class="busops-row">
-
-    <!-- Discipline Selection -->
-    <select id="busOpsDiscipline-${i}">
-      <option value="">Select discipline</option>
-      <option>Publications</option>
-      <option>Training</option>
-    </select>
-
-    <!-- Add Discipline -->
-    <button class="btn-shorter" onclick="addBusOpsDiscipline(${i})">
-      Add Discipline
-    </button>
-
-    
-    <label class="chk-pill" style="display:flex; align-items:center; gap:6px;">
-      <!-- ConfirmedCheckbox -->
-      <input
-        type="checkbox"
-        ${p.confirmedBusOpsDisciplines ? 'checked' : ''}
-        onchange="
-          updateField(${i}, 'confirmedBusOpsDisciplines', this.checked);
-          render();
-        "
-      >
-      Confirmed BusOps Disciplines
-    </label>
-
-    <!-- Confirmation Date -->
-    <label style="display:flex; align-items:center; gap:6px;">
-      <span class="small">Date: </span>
-      <input
-        type="date"
-        ${!p.confirmedBusOpsDisciplines ? 'disabled' : ''}
-        value="${p.busOpsDisciplineConfirmedDate || ''}"
-        onchange="updateField(${i}, 'busOpsDisciplineConfirmedDate', this.value)"
-      >
-    </label>
-
-    <!-- Confirmed By -->
-    <label style="display:flex; align-items:center; gap:6px;">
-      <span class="small">Confirmed By</span>
-      <select
-        ${!p.confirmedBusOpsDisciplines ? 'disabled' : ''}
-        onchange="updateField(${i}, 'busOpsDisciplineConfirmedBy', this.value)"
-      >
-        ${memberOptions(p, p.busOpsDisciplineConfirmedBy)}
-      </select>
-    </label>
-  </div>
-
-
-  <!-- Bulleted Disciplines -->
-  <ul class="small small-bulleted-disciplines">
-    ${(p.busOpsDisciplines || []).map((d, idx) => `
-      <li
-        draggable="true"
-        ondragstart="disciplineDragStart(${i}, ${idx})"
-        ondragend="disciplineDragEnd()"
-        ondragover="event.preventDefault()"
-        ondrop="disciplineDrop(${i}, ${idx})"
-      >
-        ${d.type}
-
-        <button onclick="editBusOpsDiscipline(${i}, ${idx})"
-                style="font-size:11px; padding:2px 6px;">
-          ✏️
-        </button>
-
-        <button onclick="deleteBusOpsDiscipline(${i}, ${idx})"
-                style="font-size:11px; padding:2px 6px;">
-          🗑️
-        </button>
-      </li>
-    `).join('')}
-  </ul>
-
-
-  <div class="section-header">Overall Project Status</div>
-
-  <div class="row status-grid">
-
-    <label>
-      Primary Vendor
-      <select onchange="updateField(${i}, 'primaryVendor', this.value)">
-        <option value="">Select</option>
-        <option value="ITMO" ${p.primaryVendor === 'ITMO' ? 'selected' : ''}>ITMO</option>
-        <option value="BusOps" ${p.primaryVendor === 'BusOps' ? 'selected' : ''}>BusOps</option>
-      </select>
-    </label>
-
-    <label>
-      Project Status
-      <select onchange="updateField(${i}, 'projectStatus', this.value)">
-        <option value="" ${!p.projectStatus ? 'selected' : ''}>Select</option>
-        ${['Pending','Open','Work in Progress','Waiting Approval'].map(s => `
-          <option value="${s}" ${p.projectStatus === s ? 'selected' : ''}>
-            ${s}
-          </option>
-        `).join('')}
-      </select>
-    </label>
-
-    <label>ITMO PM
-      <select onchange="updateField(${i}, 'itmoPM', this.value)">
-        ${memberOptions(p, p.itmoPM)}
-      </select>
-    </label>
-
-    <label>BusOps PM
-      <select onchange="updateField(${i}, 'busOpsPM', this.value)">
-        ${memberOptions(p, p.busOpsPM)}
-      </select>
-    </label>
-
-    <label>Program Requester
-      <select onchange="updateField(${i}, 'programRequester', this.value)">
-        ${memberOptions(p, p.programRequester)}
-      </select>
-    </label>
-
-    <label>IT Analyst
-      <select onchange="updateField(${i}, 'itAnalyst', this.value)">
-        ${memberOptions(p, p.itAnalyst)}
-      </select>
-    </label>
-
-    <label>CA‑MMIS Manager
-      <select onchange="updateField(${i}, 'cammiManager', this.value)">
-        ${memberOptions(p, p.cammiManager)}
-      </select>
-    </label>
-
-    <label>Business Analyst
-      <select onchange="updateField(${i}, 'businessAnalyst', this.value)">
-        ${memberOptions(p, p.businessAnalyst)}
-      </select>
-    </label>
-
-    <label>Test Analyst
-      <select onchange="updateField(${i}, 'testAnalyst', this.value)">
-        ${memberOptions(p, p.testAnalyst)}
-      </select>
-    </label>
-
-            <label>Project State: <select onchange="updateField(${i},'state',this.value)">
-          <option value="" ${p.state===''?'selected':''}>Unassigned</option>
-          <option value="1-Inception" ${p.state==='1-Inception'?'selected':''}>1-Inception</option>
-          <option value="2-Elaboration" ${p.state==='2-Elaboration'?'selected':''}>2-Elaboration</option>
-          <option value="3-Construction" ${p.state==='3-Construction'?'selected':''}>3-Construction</option>
-          <option value="4-Transition" ${p.state==='4-Transition'?'selected':''}>4-Transition</option>
-        </select></label>
-
-  </div>
-
-  <div class="section-header">Checkboxes</div>
-<div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-
-  <label class="chk-pill" style="display:flex; align-items:center; gap:6px;">
-    <input
-      type="checkbox"
-      ${p.weeklyMeeting ? 'checked' : ''}
-      onchange="
-        updateField(${i}, 'weeklyMeeting', this.checked);
-        render();
-      "
-    >
-    Weekly Meeting
-  </label>
-
-<div class="row" style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
-
-  <!-- Weekly Meeting + Day + Time -->
-  <div style="display:flex; align-items:center; gap:8px;">
-
-
-    <select
-      ${!p.weeklyMeeting ? 'disabled' : ''}
-      onchange="updateField(${i}, 'weeklyMeetingDay', this.value)">
-      <option value="">Day</option>
-      ${['Monday','Tuesday','Wednesday','Thursday','Friday'].map(d => `
-        <option value="${d}" ${p.weeklyMeetingDay === d ? 'selected' : ''}>
-          ${d}
-        </option>
-      `).join('')}
-    </select>
-
-    <span class="small">at</span>
-
-    <input
-      type="time"
-      ${!p.weeklyMeeting ? 'disabled' : ''}
-      value="${p.weeklyMeetingTime || ''}"
-      onchange="updateField(${i}, 'weeklyMeetingTime', this.value)">
-
-    <span class="small">PST</span>
-  </div>
-
-  <!-- Skipped SNOW Tasks -->
-  <label class="chk-pill">
-    <input
-      type="checkbox"
-      ${p.skippedAllTasks ? 'checked' : ''}
-      onchange="updateField(${i}, 'skippedAllTasks', this.checked)">
-    Skipped All SNOW Tasks
-  </label>
-
-  <!-- ORP Related -->
-  <label class="chk-pill">
-    <input
-      type="checkbox"
-      ${p.orpRelated ? 'checked' : ''}
-      onchange="updateField(${i}, 'orpRelated', this.checked)">
-    ORP Related Project
-  </label>
-
-</div>
-</div>
-</div>
-
-      <div class="row">
-
-      </div>
-      <div class="section-header">WBS Codes</div>
-      <div class="row">
-        <select id="wbsType-${i}">
-          <option selected>Project</option>
-          <option>Assessment</option>
-          <option>T&M</option>
-        </select>
-        <input placeholder="WBS Code" id="wbsCode-${i}">
-        <button class="btn-shorter" onclick="addWBS(${i})">Add WBS</button>
-      </div>
-
-      <ul class="small">
-        ${(p.wbs || []).map((w, idx) => `
-          <li
-            draggable="true"
-            class="wbs-item"
-            ondragstart="wbsDragStart(${i}, ${idx})"
-            ondragend="wbsDragEnd()"
-            ondragover="event.preventDefault()"
-            ondrop="wbsDrop(${i}, ${idx})"
-          >
-            ${w.type}: ${w.code}
-
-            <button onclick="copyWBS('${w.code}')"
-                    style="font-size:11px; padding:2px 6px;">Copy</button>
-
-            <button onclick="editWBS(${i}, ${idx})"
-                    style="font-size:11px; padding:2px 6px;">✏️</button>
-
-            <button onclick="deleteWBS(${i}, ${idx})"
-                    style="font-size:11px; padding:2px 6px;">🗑️</button>
-          </li>
-        `).join('')}
-      </ul>
-
-      <div class="section-header">Hyperlinks</div> 
-      <div class="row">
-        <select id="linkType-${i}">
-          <option value="">Select</option>
-          <option>Gainwell SharePoint</option>
-          <option>DHCS SNOW Link</option>
-        </select>
-        <input placeholder="Hyperlink URL" id="linkUrl-${i}">
-        <button class="btn-shorter" onclick="addHyperlink(${i})">Add Link</button>
-      </div>
-
-      <ul class="small">
-        ${(p.hyperlinks || []).map((l, idx) => `
-          <li
-            draggable="true"
-            class="hyperlink-item"
-            ondragstart="linkDragStart(${i}, ${idx})"
-            ondragend="linkDragEnd()"
-            ondragover="event.preventDefault()"
-            ondrop="linkDrop(${i}, ${idx})"
-          >
-            <a href="${l.url}" target="_blank">${l.type}</a>
-
-            <button onclick="copyHyperlink('${l.url}')"
-                    style="font-size:11px; padding:2px 6px;">Copy</button>
-
-            <button onclick="editHyperlink(${i}, ${idx})"
-                    style="font-size:11px; padding:2px 6px;">✏️</button>
-
-            <button onclick="deleteHyperlink(${i}, ${idx})"
-                    style="font-size:11px; padding:2px 6px;">🗑️</button>
-          </li>
-        `).join('')}
-      </ul>
-
-      <div class="section-header">Tasks</div>
-      <div class="row">
-        <input
-          placeholder="Add task"
-          id="taskInput-${i}"
-          onkeydown="if(event.key==='Enter'){event.preventDefault(); addProjectTask(${i})}"
-        >
-        <button class="btn-shorter" onclick="addProjectTask(${i})">Add Task</button>
-      </div>
-
-      <div class="task-list">
-        ${(p.tasks || []).map((t, idx) => `
-          <div class="task-card"
-              draggable="true"
-              ondragstart="taskDragStart(${i}, ${idx})"
-              ondragend="taskDragEnd()"
-              ondragover="event.preventDefault()"
-              ondrop="taskDrop(${i}, ${idx})">
-
-            <span>${t.text}</span>
-
-            <button onclick="editProjectTask(${i}, ${idx})"
-                    style="font-size:11px; padding:2px 6px;">✏️</button>
-
-            <button onclick="deleteProjectTask(${i}, ${idx})"
-                    style="font-size:11px; padding:2px 6px;">🗑️</button>
-          </div>
-        `).join('')}
-      </div>
-
-    <div class="section-header">Dates</div>
-    <div class="row">
-      <select id="dateType-${i}">
-        <option value="">Select</option>
-        <option>OCC Letter</option>
-        <option>Start Date</option>
-        <option>Kickoff Meeting</option>
-        <option>SIT</option>
-        <option>UAT</option>
-        <option>PROD</option>
-      </select>
-
-      <input type="date" id="dateValue-${i}">
-      <button class="btn-shorter" onclick="addProjectDate(${i})">Add Date</button>
-      <ul class="">
-        ${(p.dates || []).map((d, idx) => `
-          <li class="date-item"
-              draggable="true"
-              ondragstart="dateDragStart(${i}, ${idx})"
-              ondragend="dateDragEnd()"
-              ondragover="event.preventDefault()"
-              ondrop="dateDrop(${i}, ${idx})">
-
-            <strong>${d.type}</strong>: ${formatDateMDY(d.value)}
-
-
-            <button onclick="editProjectDate(${i}, ${idx})"
-                    style="font-size:11px; padding:2px 6px;">✏️</button>
-
-            <button onclick="deleteProjectDate(${i}, ${idx})"
-                    style="font-size:11px; padding:2px 6px;">🗑️</button>
-          </li>
-        `).join('')}
-      </ul>
-      
-    </div>
-
-    <div class="section-header">Member Info</div>
-    <div class="row">
-        <input placeholder="Member name" id="mname-${i}" onkeydown="handleMemberEnter(${i}, event)">
-        <input placeholder="Member email" id="memail-${i}" onkeydown="handleMemberEnter(${i}, event)">
-        <input placeholder="Groups (e.g. Training, Ops)" id="mgroups-${i}" onkeydown="handleMemberEnter(${i}, event)">
-        <button class="btn-shorter" onclick="addMember(${i},
-          document.getElementById('mname-${i}').value,
-          document.getElementById('memail-${i}').value,
-          document.getElementById('mgroups-${i}').value)">
-          Add
-        </button>
-    </div>
-
-    <ul class="small">
-        ${(() => {
-          const grouped = {};
-          const displayName = {};
-
-          (p.members || []).forEach((m, idx) => {
-            const teams = (m.groups || []).length > 0 ? m.groups : ['No Group'];
-            teams.forEach(team => {
-              const key = normalizeGroupKey(team);
-              if (!grouped[key]) {
-                grouped[key] = [];
-                displayName[key] = normalizeGroupName(team);
-              }
-              grouped[key].push({...m, originalIndex: idx});
-            });
-          });
-          
-          return Object.keys(grouped).sort().map(team => `
-            <li><strong>${displayName[team]}</strong> <button onclick="copyGroupEmails(${i}, '${team}')" style="font-size:11px; padding:2px 6px;">Copy Emails</button>
-              <ul>
-                ${grouped[team].map(m => `
-                <li
-                  draggable="true"
-                  ondragstart="memberDragStart(${i}, ${m.originalIndex})"
-                  ondragend="memberDragEnd()"
-                  ondragover="event.preventDefault()"
-                  ondrop="memberDrop(${i}, ${m.originalIndex})"
-                >
-                    ${m.name} (${m.email})
-                    <input type="checkbox" ${m.includeInEmail ? 'checked' : ''} onchange="toggleIncludeInEmail(${i}, ${m.originalIndex})"> Include in Email
-                    <button onclick="copyEmail(${i}, ${m.originalIndex})" style="font-size:11px; padding:2px 6px;">Copy Email</button>
-                    <button onclick="editMember(${i}, ${m.originalIndex})" style="font-size:11px; padding:2px 6px;">✏️</button>
-                    <button onclick="deleteMember(${i}, ${m.originalIndex})" style="font-size:11px; padding:2px 6px;">🗑️</button>
-                  </li>
-                `).join('')}
-              </ul>
-            </li>
-          `).join('');
-        })()}
-    </ul>
-
-    <div class="row">
-      <textarea placeholder="Project notes" onblur="updateField(${i},'notes',this.value)">${p.notes}</textarea>
-    </div>
-
-
-    `;
-
-    container.appendChild(div);
-  });
-}
-
-function toggleArchiveView() {
-  showArchived = !showArchived;
-  render();
-}
 
 
 function exportData() {
@@ -1309,27 +1649,6 @@ function exportData() {
   URL.revokeObjectURL(url);
 }
 
-// function copyExportText() {
-//   const text = document.getElementById('exportText');
-//   text.select();
-//   navigator.clipboard.writeText(text.value).then(() => alert('Data copied to clipboard!'));
-// }
-
-// function closeExportModal() {
-//   document.getElementById('exportModal').classList.remove('show');
-// }
-
-// function openImportModal() {
-//   document.getElementById('importText').value = '';
-//   document.getElementById('importModal').classList.add('show');
-// }
-
-// function openImportModal() {
-//   if (!confirm('Importing will overwrite all existing projects. Continue?')) {
-//     return;
-//   }
-//   document.getElementById('importFileInput').click();
-// }
 
 function handleImportFile(file) {
   if (!file) return;
@@ -1449,13 +1768,13 @@ function editProjectDate(projectIndex, dateIndex) {
   const date = projects[projectIndex].dates[dateIndex];
 
   let type = prompt(
-    "Edit Date Type (OCC Letter, Start Date, Kickoff Meeting, SIT, UAT, PROD, or Blank)",
+    "Edit Date Type (OCC Letter, Start Date, End Date, Kickoff Meeting, SIT, UAT, PROD, or Blank)",
     date.type
   );
   if (type === null) return;
 
   type = type.trim();
-  if (!['OCC Letter','Start Date','Kickoff Meeting','SIT','UAT','PROD','Blank'].includes(type)) {
+  if (!['OCC Letter','Start Date', 'End Date', 'Kickoff Meeting','SIT','UAT','PROD','Blank'].includes(type)) {
     alert('Invalid date type.');
     return;
   }
@@ -1626,8 +1945,8 @@ function editBusOpsDiscipline(projectIndex, index) {
 
   if (next === null) return;
 
-  if (!['Publications', 'Training'].includes(next)) {
-    alert('Invalid discipline. Allowed values: Publications, Training.');
+  if (!['Publications', 'Training', 'None'].includes(next)) {
+    alert('Invalid discipline. Allowed values: Publications, Training, None.');
     return;
   }
 
@@ -1775,8 +2094,108 @@ function saveDescriptionEdit(projectIndex, el) {
   save();
 }
 
+function updateArchiveToggleTooltip() {
+  const btn = document.getElementById('toggleArchivedBtn');
+  if (!btn) return;
+
+  if (showArchived) {
+    btn.dataset.tooltip = "Showing: Active + Archived projects";
+    // Optional: make the button label clearer
+    btn.textContent = "Hide Archived";
+  } else {
+    btn.dataset.tooltip = "Showing: Active projects only";
+    // Optional: make the button label clearer
+    btn.textContent = "Show Archived";
+  }
+}
+
+function showCopyToast(message = 'Copied!') {
+  let toast = document.getElementById('copyToast');
+
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'copyToast';
+    toast.className = 'copy-toast';
+    document.body.appendChild(toast);
+  }
+
+  toast.textContent = message;
+  toast.classList.add('show');
+
+  clearTimeout(toast._timeout);
+  toast._timeout = setTimeout(() => {
+    toast.classList.remove('show');
+  }, 1500);
+}
+
+function showAllProjects() {
+  viewMode = 'all';
+  updateViewButtonsAndTooltips();
+  render();
+}
+
+function toggleFilterMode() {
+  // Switch only between 'active' and 'archived'
+  viewMode = (viewMode === 'archived') ? 'active' : 'archived';
+
+  updateViewButtonsAndTooltips();
+  render();
+}
+``
+
+function updateViewButtonsAndTooltips() {
+  const toggleBtn = document.getElementById('toggleFilterBtn');
+  const showAllBtn = document.getElementById('showAllBtn');
+  const showOrpBtn = document.getElementById('showOrpBtn');
+
+  if (!toggleBtn || !showAllBtn || !showOrpBtn) return;
+
+  // Toggle button ONLY switches between active-only and archived-only
+  if (viewMode === 'active') {
+    toggleBtn.textContent = 'Show Archived Only';
+    toggleBtn.dataset.tooltip = 'Showing: Active projects only';
+  } else if (viewMode === 'archived') {
+    toggleBtn.textContent = 'Show Active Only';
+    toggleBtn.dataset.tooltip = 'Showing: Archived projects only';
+  } else if (viewMode === 'all') {
+    toggleBtn.textContent = 'Show Archived Only';
+    toggleBtn.dataset.tooltip = 'Showing: All projects (Active + Archived)';
+  } else if (viewMode === 'orp') {
+    toggleBtn.textContent = 'Show Archived Only';
+    toggleBtn.dataset.tooltip = 'Showing: ORP-related projects only';
+  }
+
+  // Show All button
+  if (viewMode === 'all') {
+    showAllBtn.dataset.tooltip = 'Showing: All projects (Active + Archived)';
+  } else {
+    showAllBtn.dataset.tooltip = 'Click to show all projects (Active + Archived)';
+  }
+
+  // Show ORP button
+  if (viewMode === 'orp') {
+    showOrpBtn.dataset.tooltip = 'Showing: ORP-related projects only';
+  } else {
+    showOrpBtn.dataset.tooltip = 'Click to show ORP-related projects only';
+  }
+}
+
+function showOrpProjects() {
+  viewMode = 'orp';
+  updateViewButtonsAndTooltips();
+  render();
+}
+
+function formatDurationLabel(minutes) {
+  const m = parseInt(minutes, 10) || 0;
+  if (!m) return '';
+  if (m === 60) return '1 hour';
+  if (m % 60 === 0) return `${m / 60} hours`;
+  return `${m} mins`;
+}
 
 normalizeProjects();
+updateViewButtonsAndTooltips();
 render();
 </script>
 </body>
