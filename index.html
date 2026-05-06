@@ -23,6 +23,8 @@
   --text-muted: #6b7280;
   --border-soft: #e5e7eb;
 
+  --separator-hard: #a8acb5;
+
   --shadow-soft:
     0 1px 3px rgba(0,0,0,0.06),
     0 8px 20px rgba(0,0,0,0.07);
@@ -172,7 +174,7 @@ textarea {
     0 6px 16px rgba(17, 24, 39, 0.08);
 
   position: relative;
-  top: 23px;
+  top: 6px;
   right: 6px;
 }
 
@@ -309,6 +311,15 @@ textarea {
   background: rgba(79, 70, 229, 0.06);
 }
 
+.project .project-name-secondary {
+  white-space: normal;        /* ✅ allow wrapping */
+  word-break: break-word;     /* ✅ break long words */
+  overflow-wrap: anywhere;    /* ✅ modern safety net */
+  min-width: 0;               /* ✅ CRITICAL for flexbox */
+  flex: 1 1 auto;             /* ✅ allows shrink + wrap */
+}
+
+
 /* ================================
    SMALL TEXT
 ================================ */
@@ -417,7 +428,8 @@ textarea {
 }
 
 /* Targets ONLY the group header strong (Training/Ops/No Group) */
-.project .section-header + .row + ul.small > li > strong {
+/* .project .section-header + .row + ul.small > li > strong { */
+.project .group-header-name {
   color: var(--primary);
   font-size: 13px;
   font-weight: 700;
@@ -476,6 +488,7 @@ textarea {
 
 .bulleted-list{
   padding-left: 30px;
+  font-size: 14px;
 }
 
 .bulleted-list >li{
@@ -492,7 +505,7 @@ textarea {
 }
 
 /* flex ONLY the contents inside the li */
-.project .hyperlink-content, .project .task-content, .project .busops-content {
+.project .hyperlink-content, .project .task-content, .project .busops-content, .project .dcn-content, .project .raid-content {
   display: flex;
   align-items: center;
   gap: 6px; /* ✅ spacing between link + buttons */
@@ -621,6 +634,335 @@ textarea {
   padding: 6px 8px;
 }
 
+/* ================================
+   ADD EXISTING MEMBER MODAL
+================================ */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(17, 24, 39, 0.55); /* slate overlay */
+  backdrop-filter: blur(2px);
+  z-index: 99998;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+}
+
+.modal-card {
+  width: min(860px, 95vw);
+  max-height: 85vh;
+  overflow: hidden;
+
+  background: var(--bg-card);
+  border: 1px solid var(--border-soft);
+  border-radius: 18px;
+
+  box-shadow:
+    0 10px 30px rgba(0,0,0,0.22),
+    0 1px 3px rgba(0,0,0,0.08);
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.modal-title {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--text-main);
+}
+
+.modal-subtitle {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.modal-body {
+  padding: 12px 16px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.modal-search {
+  width: 100%;
+  border: 1px solid var(--border-soft);
+  border-radius: 10px;
+  padding: 9px 10px;
+  font-size: 13px;
+}
+
+.modal-list {
+  border: 1px solid var(--border-soft);
+  border-radius: 14px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.modal-list-header,
+.modal-row {
+  display: grid;
+  grid-template-columns: 34px 1.2fr 1.6fr 1fr; /* ✅ checkbox + Name + Email + Group */
+  gap: 10px;
+  align-items: center;
+}
+
+.modal-list-header {
+  padding: 10px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+  background: #f8fafc;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.modal-rows {
+  max-height: 48vh;
+  overflow: auto;
+}
+
+.modal-row {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border-soft);
+  font-size: 13px;
+}
+
+.modal-row:last-child {
+  border-bottom: none;
+}
+
+.modal-row .muted {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.modal-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(79, 70, 229, 0.12);
+  background: rgba(79, 70, 229, 0.06);
+  color: var(--text-main);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.modal-footer {
+  padding: 12px 16px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  border-top: 1px solid var(--border-soft);
+  background: #fff;
+}
+
+/* Secondary button to match your style system */
+.btn-secondary {
+  background: linear-gradient(135deg, #64748b, #334155);
+  box-shadow: 0 4px 14px rgba(51, 65, 85, 0.25);
+}
+
+.btn-secondary:hover {
+  box-shadow: 0 6px 20px rgba(51, 65, 85, 0.35);
+}
+
+/* Tiny add button inside rows */
+.btn-tiny {
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-size: 14px;
+}
+
+.btn-secondary{
+  font-size: 14px
+}
+
+
+.project-header-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  flex-wrap: wrap; /* ✅ allows wrap on small screens */
+}
+
+.project-actions {
+  position: absolute;
+  top: 15px;
+  right: 14px;
+
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  white-space: nowrap; /* ✅ keeps buttons on one line */
+}
+
+.member-email-li{
+  font-size: 14px;
+}
+
+.date-type {
+  font-weight: 600;
+  font-size: 16px;
+}
+
+/* ================================
+   DCN Section
+================================ */
+
+.dcn-item {
+  cursor: grab;
+}
+.dcn-item:active {
+  cursor: grabbing;
+  opacity: 0.85;
+}
+
+/* Optional: make the DCN number stand out slightly */
+.dcn-number {
+  font-weight: 700;
+}
+
+/* RAID Log */
+
+.raid-item {
+  cursor: grab;
+}
+
+.raid-item:active {
+  cursor: grabbing;
+  opacity: 0.85;
+}
+
+.modal-separator {
+  position: relative;
+  top: 5px;
+}
+
+
+
+/* ================================
+   EMAIL TEMPLATES
+================================ */
+.emailtpl-item { cursor: grab; }
+.emailtpl-item:active { cursor: grabbing; opacity: 0.85; }
+
+.project .emailtpl-name {
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.rich-editor {
+  border: 1px solid var(--border-soft);
+  border-radius: 12px;
+  padding: 10px 12px;
+  min-height: 170px;
+  background: #fff;
+  outline: none;
+  overflow: auto;
+}
+
+.rich-editor:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(79,70,229,0.15);
+}
+
+.editor-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 10px;
+  border: 1px solid var(--border-soft);
+  border-radius: 12px;
+  background: #f8fafc;
+}
+
+.editor-toolbar button {
+  padding: 6px 10px;
+  border-radius: 10px;
+  font-size: 12px;
+  box-shadow: none;
+}
+
+.editor-toolbar .btn-secondary {
+  box-shadow: none;
+}
+
+/* Email Template "To" list inside the modal */
+.emailtpl-to-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: #f8fafc;
+  border: 1px solid var(--border-soft);
+  font-size: 13px;
+  cursor: grab;
+  margin-bottom: 4px;
+}
+
+.emailtpl-to-item:active {
+  cursor: grabbing;
+  opacity: 0.85;
+}
+
+.emailtpl-to-item .to-name  { font-weight: 600; }
+.emailtpl-to-item .to-email { color: var(--text-muted); font-size: 12px; }
+
+
+/* Email Template "CC" list (same styling as To) */
+.emailtpl-cc-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: #f8fafc;
+  border: 1px solid var(--border-soft);
+  font-size: 13px;
+  cursor: grab;
+  margin-bottom: 4px;
+}
+
+.emailtpl-cc-item:active {
+  cursor: grabbing;
+  opacity: 0.85;
+}
+
+.emailtpl-cc-item .cc-name  { font-weight: 600; }
+.emailtpl-cc-item .cc-email { color: var(--text-muted); font-size: 12px; }
+
+/* Taller email template modal */
+#emailTemplateModalOverlay .modal-card {
+  max-height: 92vh;       /* was 85vh — use more of the screen */
+}
+
+/* Give the rich editor more room */
+#emailTemplateModalOverlay .rich-editor {
+  min-height: 350px;      /* was 170px */
+  flex: 1;                /* fills remaining space */
+}
+
+.add-email-template {
+  margin-top: 6px;
+}
+.copy-emails-all-groups {
+  margin-top: 14px;
+}
+
 </style>
 </head>
 <body>
@@ -665,7 +1007,9 @@ textarea {
     <button onclick="openImportModal()">Import Data</button>
   </div>
   <div class="controls-row full-width top-input">
-    <input id="projectFilter" placeholder="Filter projects..." oninput="render()" />
+  <input id="projectFilter"
+        placeholder="Filter projects..."
+        oninput="saveFilter(); render()" />
   </div>
 </div>
 
@@ -680,7 +1024,10 @@ textarea {
 <script>
 let projects = JSON.parse(localStorage.getItem('projects') || '[]');
 // viewMode: 'active' | 'archived' | 'all' | 'orp'
-let viewMode = 'active';
+const validModes = ['active', 'archived', 'all', 'orp'];
+let viewMode = validModes.includes(localStorage.getItem('viewMode'))
+  ? localStorage.getItem('viewMode')
+  : 'active';
 let dragIndex = null;
 let dragMember = null;
 let dragTask = null;
@@ -690,6 +1037,32 @@ let dragWBSProject = null;
 let dragWBSIndex = null;
 let dragLinkProject = null;
 let dragLinkIndex = null;
+
+let dragDCNProject = null;
+let dragDCNIndex = null;
+
+let dragRaidProject = null;
+let dragRaidIndex = null;
+
+
+let emailTemplateModalProjectIndex = null;
+let emailTemplateModalEditIndex = null;
+
+let dragEmailTemplateProject = null;
+let dragEmailTemplateIndex = null;
+
+let emailTplToEmails = [];
+let dragEmailToIndex = null;
+
+let emailTplCcEmails = [];
+let dragEmailCcIndex = null;
+
+const savedFilter = localStorage.getItem('projectFilter') || '';
+
+const filterInput = document.getElementById('projectFilter');
+if (filterInput) {
+  filterInput.value = savedFilter;
+}
 
 
 function render() {
@@ -704,7 +1077,10 @@ function render() {
     if (!Array.isArray(p.hyperlinks)) p.hyperlinks = [];
     if (!Array.isArray(p.tasks)) p.tasks = [];
     if (!Array.isArray(p.dates)) p.dates = [];
-    if (typeof p.orpRelated !== 'boolean') p.orpRelated = false
+    if (typeof p.orpRelated !== 'boolean') p.orpRelated = false;
+    if (!Array.isArray(p.dcns)) p.dcns = [];
+    if (!Array.isArray(p.raid)) p.raid = [];
+    if (!Array.isArray(p.emailTemplates)) p.emailTemplates = [];
     
     p.members.forEach(m => {
       if (!Array.isArray(m.groups)) m.groups = [];
@@ -739,7 +1115,7 @@ function render() {
       save(); render();
     };
 div.innerHTML = `
-  <div
+  <div class="project-header-row"
     style="
       display: flex;
       align-items: center;
@@ -769,56 +1145,59 @@ div.innerHTML = `
       ondblclick="enableName2Edit(this)"
       onkeydown="handleName2Key(event, ${i}, this)"
       onblur="saveName2Edit(${i}, this)"
-      style="white-space:nowrap;"
     >
       ${p.name2 || ''}
     </strong>
 
     <!-- FLEX SPACER -->
-    <div style="flex: 1;"></div>
-
-    <!-- Active Indicator -->
-    <span
-      class="small"
-      style="
-        font-size:14px;
-        white-space:nowrap;
-        padding:4px 11px;
-        border-radius:999px;
-        font-weight:600;
-        background:${p.archived
-          ? 'rgba(220,38,38,0.15)'
-          : 'rgba(22,163,74,0.15)'};
-        color:${p.archived
-          ? '#dc2626'
-          : '#16a34a'};
-      "
-    >
-      ${p.archived ? 'Archived' : 'Active'}
-    </span>
-
-
-    <!-- Separator -->
-    <span style="color:var(--border-soft); font-weight:600;">│</span>
-
-    <!-- Archive/Delete Buttons -->
-    <div style="display:flex; gap:10px; white-space:nowrap;">
-
-      <!-- Archive/Restore -->
-      <button onclick="toggleArchive(${i})"
-              style="font-size:13px; padding:5px 11px;">
-        ${p.archived ? 'Restore' : 'Archive'}
-      </button>
-
-      <!-- Delete -->
-      <button onclick="deleteProject(${i})"
-              style="font-size:13px; padding:5px 11px;">
-        Delete
-      </button>
+    <!-- <div style="flex: 1;"></div> -->
 
     </div>
 
-  </div>
+      <div class="project-actions">
+        <!-- Active Indicator -->
+        <span
+          class="small"
+          style="
+            font-size:14px;
+            white-space:nowrap;
+            padding:4px 11px;
+            border-radius:999px;
+            font-weight:600;
+            background:${p.archived
+              ? 'rgba(220,38,38,0.15)'
+              : 'rgba(22,163,74,0.15)'};
+            color:${p.archived
+              ? '#dc2626'
+              : '#16a34a'};
+          "
+        >
+          ${p.archived ? 'Archived' : 'Active'}
+        </span>
+
+
+        <!-- Separator -->
+        <span style="color:var(--border-soft); font-weight:600;">│</span>
+
+        <!-- Archive/Delete Buttons -->
+        <div style="display:flex; gap:10px; white-space:nowrap;">
+
+        <!-- Archive/Restore -->
+        <button onclick="toggleArchive(${i})"
+                style="font-size:13px; padding:5px 11px;">
+          ${p.archived ? 'Restore' : 'Archive'}
+        </button>
+
+        <!-- Delete -->
+        <button onclick="deleteProject(${i})"
+                style="font-size:13px; padding:5px 11px;">
+          Delete
+        </button>
+      </div>
+
+    </div>
+
+  
 
   <!-- Project Description -->
   <strong
@@ -917,6 +1296,55 @@ div.innerHTML = `
     `).join('')}
   </ul>
 
+  <!-- Associated DCNs -->
+    <div class="section-header">Associated DCNs</div>
+
+    <div class="row">
+      <input
+        id="dcnNum-${i}"
+        placeholder="DCN Number (e.g., DCN 123)"
+      >
+      <input
+        id="dcnDesc-${i}"
+        placeholder="DCN short description"
+      >
+      <button class="btn-shorter" onclick="addDCN(${i})">Add DCN</button>
+    </div>
+
+    <!-- DCN List -->
+    <ul class="small bulleted-list">
+      ${(p.dcns || []).map((d, idx) => `
+        <li
+          class="dcn-item"
+          draggable="true"
+          ondragstart="dcnDragStart(${i}, ${idx})"
+          ondragend="dcnDragEnd()"
+          ondragover="event.preventDefault()"
+          ondrop="dcnDrop(${i}, ${idx})"
+        >
+          <span class="dcn-content">
+            <span>
+              <span class="dcn-number">${d.number}</span>${d.desc ? `: ${d.desc}` : ''}
+            </span>
+
+            <button
+              onclick="event.stopPropagation(); editDCN(${i}, ${idx})"
+              onmousedown="event.stopPropagation()"
+              draggable="false"
+              style="font-size:11px; padding:2px 6px;"
+            >✏️</button>
+
+            <button
+              onclick="event.stopPropagation(); deleteDCN(${i}, ${idx})"
+              onmousedown="event.stopPropagation()"
+              draggable="false"
+              style="font-size:11px; padding:2px 6px;"
+            >🗑️</button>
+          </span>
+        </li>
+      `).join('')}
+    </ul>
+
   <!-- Overall Project Status -->
   <div class="section-header">Overall Project Status</div>
 
@@ -983,6 +1411,12 @@ div.innerHTML = `
       </select>
     </label>
 
+    <label>Publications Analyst
+      <select onchange="updateField(${i}, 'publicationsAnalyst', this.value)">
+        ${memberOptions(p, p.publicationsAnalyst)}
+      </select>
+    </label>
+
     <label>Program Requester
       <select onchange="updateField(${i}, 'programRequester', this.value)">
         ${memberOptions(p, p.programRequester)}
@@ -1013,6 +1447,69 @@ div.innerHTML = `
       </select>
     </label>
   </div>
+
+  <!-- RAID Log -->
+<div class="section-header">RAID Log</div>
+
+<div class="row">
+  <select id="raidType-${i}">
+    <option value="">Select</option>
+    <option>Risk</option>
+    <option>Assumption</option>
+    <option>Issue</option>
+    <option>Dependency</option>
+  </select>
+
+  <input id="raidTitle-${i}" placeholder="RAID Title">
+
+  <input id="raidDesc-${i}" placeholder="RAID Description">
+
+  <select id="raidAssigned-${i}">
+    ${memberOptions(p, '')}   <!-- ✅ reuses your existing helper -->
+  </select>
+
+  <button class="btn-shorter" onclick="addRaidItem(${i})">
+    Add RAID Item
+  </button>
+</div>
+
+  <!-- RAID Log -->
+  <ul class="small bulleted-list">
+    ${(p.raid || []).map((r, idx) => `
+      <li
+        class="raid-item"
+        draggable="true"
+        ondragstart="raidDragStart(${i}, ${idx})"
+        ondragend="raidDragEnd()"
+        ondragover="event.preventDefault()"
+        ondrop="raidDrop(${i}, ${idx})"
+      >
+        <span class="raid-content">
+
+          <span>
+            <strong>${r.type}</strong> — ${r.title}
+            ${r.desc ? `<span style="color:var(--text-muted)"> (${r.desc})</span>` : ''}
+            ${r.assigned ? `<span class="small"> [${r.assigned}]</span>` : ''}
+          </span>
+
+          <button onclick="event.stopPropagation(); editRaidItem(${i}, ${idx})"
+                  onmousedown="event.stopPropagation()"
+                  draggable="false"
+                  style="font-size:11px; padding:2px 6px;">
+            ✏️
+          </button>
+
+          <button onclick="event.stopPropagation(); deleteRaidItem(${i}, ${idx})"
+                  onmousedown="event.stopPropagation()"
+                  draggable="false"
+                  style="font-size:11px; padding:2px 6px;">
+            🗑️
+          </button>
+
+        </span>
+      </li>
+    `).join('')}
+  </ul>
 
   <!-- Checkboxes -->
   <div class="section-header">Checkboxes</div>
@@ -1055,7 +1552,9 @@ div.innerHTML = `
 
     <span class="small">${p.weeklyMeetingTimezone || 'PST'}</span>
 
-    <!-- ✅ NEW: Meeting length -->
+    <span class="small">for</span>
+
+    <!-- Meeting length -->
     <select
       ${!p.weeklyMeeting ? 'disabled' : ''}
       onchange="updateField(${i}, 'weeklyMeetingDuration', this.value)">
@@ -1073,7 +1572,7 @@ div.innerHTML = `
       `).join('')}
     </select>
 
-    <span class="small">at</span>
+    
 
   </div>
 
@@ -1215,7 +1714,7 @@ div.innerHTML = `
         <option value="">Select</option>
         <option>OCC Letter</option>
         <option>Start Date</option>
-        <option>End Date</option
+        <option>End Date</option>
         <option>Kickoff Meeting</option>
         <option>SIT</option>
         <option>UAT</option>
@@ -1233,7 +1732,7 @@ div.innerHTML = `
               ondragover="event.preventDefault()"
               ondrop="dateDrop(${i}, ${idx})">
 
-            <strong>${d.type}</strong>: ${formatDateMDY(d.value)}
+            <span class="date-type">${d.type}</span>: ${formatDateMDY(d.value)}
 
 
             <button onclick="editProjectDate(${i}, ${idx})"
@@ -1258,9 +1757,18 @@ div.innerHTML = `
           document.getElementById('mgroups-${i}').value)">
           Add
         </button>
+        <button class="btn-shorter" onclick="openExistingMemberModal(${i})">
+          Add Existing
+        </button>
+    </div>
+    <div class="row">
+        <button class="btn-shorter copy-emails-all-groups" onclick="copyAllCheckedEmails(${i})">
+          Copy Emails (All Groups)
+        </button>
     </div>
 
-    <ul class="small bulleted-header">
+
+    <ul class="small bulleted-header member-emails">
         ${(() => {
           const grouped = {};
           const displayName = {};
@@ -1278,7 +1786,7 @@ div.innerHTML = `
           });
           
           return Object.keys(grouped).sort().map(team => `
-            <li><strong>${displayName[team]}</strong> <button onclick="copyGroupEmails(${i}, '${team}')" style="font-size:11px; padding:2px 6px;">Copy Emails</button>
+            <li class="member-email-li"><strong class="group-header-name">${displayName[team]}</strong> <button onclick="copyGroupEmails(${i}, '${team}')" style="font-size:11px; padding:2px 6px;">Copy Emails</button>
               <ul class="bulleted-list">
                 ${grouped[team].map(m => `
                 <li
@@ -1301,6 +1809,77 @@ div.innerHTML = `
         })()}
     </ul>
 
+    <!-- Email Templates -->
+    <div class="section-header">Email Templates</div>
+
+    <div class="row">
+      <button class="btn-shorter add-email-template" onclick="openEmailTemplateModal(${i})">
+        Add Email Template
+      </button>
+    </div>
+
+    <ul class="small bulleted-list">
+${(p.emailTemplates || []).map((t, idx) => `
+  <li
+    class="emailtpl-item"
+    draggable="true"
+    ondragstart="emailTemplateDragStart(${i}, ${idx})"
+    ondragend="emailTemplateDragEnd()"
+    ondragover="event.preventDefault()"
+    ondrop="emailTemplateDrop(${i}, ${idx})"
+  >
+    <span class="emailtpl-content">
+      <span class="emailtpl-name">${escapeHtml(t.name || 'Untitled Template')}</span>
+
+      <button
+        onclick="event.stopPropagation(); copyEmailTemplateEmails(${i}, ${idx})"
+        onmousedown="event.stopPropagation()"
+        draggable="false"
+        style="font-size:11px; padding:2px 6px;"
+      >Copy Emails</button>
+
+      <button
+        onclick="event.stopPropagation(); copyEmailTemplateCCEmails(${i}, ${idx})"
+        onmousedown="event.stopPropagation()"
+        draggable="false"
+        style="font-size:11px; padding:2px 6px;"
+      >Copy CC</button>
+
+      <button
+        onclick="event.stopPropagation(); copyEmailTemplateSubject(${i}, ${idx})"
+        onmousedown="event.stopPropagation()"
+        draggable="false"
+        style="font-size:11px; padding:2px 6px;"
+      >Copy Subject</button>
+
+      <button
+        onclick="event.stopPropagation(); copyEmailTemplateBody(${i}, ${idx})"
+        onmousedown="event.stopPropagation()"
+        draggable="false"
+        style="font-size:11px; padding:2px 6px;"
+      >Copy Body</button>
+
+      <button
+        onclick="event.stopPropagation(); openEmailTemplateModal(${i}, ${idx})"
+        onmousedown="event.stopPropagation()"
+        draggable="false"
+        style="font-size:11px; padding:2px 6px;"
+      >✏️</button>
+
+      <button
+        onclick="event.stopPropagation(); deleteEmailTemplate(${i}, ${idx})"
+        onmousedown="event.stopPropagation()"
+        draggable="false"
+        style="font-size:11px; padding:2px 6px;"
+      >🗑️</button>
+    </span>
+  </li>
+`).join('')}
+
+    </ul>
+
+      <!-- Project Notes -->
+    <div class="section-header">Project Notes</div>
     <div class="row">
       <textarea class="project-notes"
                 placeholder="Project notes"
@@ -1323,6 +1902,7 @@ function addProject() {
     name2: '',
     description:'',
     archived:false,
+    raid: [],
     weeklyMeeting:false,
     weeklyMeetingDay:'',
     weeklyMeetingTime:'',
@@ -1335,11 +1915,13 @@ function addProject() {
     hyperlinks:[],
     members:[],
     tasks:[],
+    emailTemplates: [],
     notes:'',
     primaryVendor: '',
     taskStage: '',
     itmoPM: '',
     busOpsPM: '',
+    publicationsAnalyst: '',
     programRequester: '',
     itAnalyst: '',
     cammiManager: '',
@@ -1349,6 +1931,7 @@ function addProject() {
     confirmedBusOpsDisciplines: false,
     busOpsDisciplineConfirmedDate: '',
     busOpsDisciplineConfirmedBy: '',
+    dcns: [],
     projectPhase: ''
   });
   document.getElementById('newProjectName').value = '';
@@ -1366,6 +1949,7 @@ function normalizeProjects() {
     p.taskStage ??= '';
     p.itmoPM ??= '';
     p.busOpsPM ??= '';
+    p.publicationsAnalyst ??= '';
     p.programRequester ??= '';
     p.itAnalyst ??= '';
     p.cammiManager ??= '';
@@ -1374,10 +1958,14 @@ function normalizeProjects() {
     // project fields
     p.name2 ??= '';
     p.busOpsDisciplines ??= [];
+    p.raid ??= [];
     p.confirmedBusOpsDisciplines ??= false;
     p.busOpsDisciplineConfirmedDate ??= '';
     p.busOpsDisciplineConfirmedBy ??= '';
+    p.dcns ??= [];
+    p.emailTemplates ??= [];
     p.projectPhase ??= '';
+    (p.emailTemplates || []).forEach(t => { t.toEmails ??= []; t.ccEmails ??= []; });
   });
 
   save();
@@ -1387,6 +1975,10 @@ function save() {
   localStorage.setItem('projects', JSON.stringify(projects));
 }
 
+function saveFilter() {
+  const val = document.getElementById('projectFilter').value;
+  localStorage.setItem('projectFilter', val);
+}
 
 function deleteProject(i) {
   projects.splice(i,1);
@@ -1510,7 +2102,7 @@ function copyEmail(projectIndex, memberIndex) {
     .then(() => showCopyToast('Email copied'))
     .catch(() => showCopyToast('Copy failed'));
 }
-``
+
 
 function copyGroupEmails(projectIndex, group) {
   const key = normalizeGroupKey(group);
@@ -1695,6 +2287,8 @@ let dragTaskIndex = null;
 
 let dragDisciplineProject = null;
 let dragDisciplineIndex = null;
+
+let existingMemberModalProjectIndex = null;
 
 
 function addProjectTask(projectIndex) {
@@ -2037,7 +2631,7 @@ function enableName2Edit(el) {
   sel.removeAllRanges();
   sel.addRange(range);
 }
-``
+
 
 function handleName2Key(event, projectIndex, el) {
   if (event.key === 'Enter') {
@@ -2130,6 +2724,7 @@ function showCopyToast(message = 'Copied!') {
 
 function showAllProjects() {
   viewMode = 'all';
+  localStorage.setItem('viewMode', viewMode); 
   updateViewButtonsAndTooltips();
   render();
 }
@@ -2138,10 +2733,11 @@ function toggleFilterMode() {
   // Switch only between 'active' and 'archived'
   viewMode = (viewMode === 'archived') ? 'active' : 'archived';
 
+  localStorage.setItem('viewMode', viewMode);
   updateViewButtonsAndTooltips();
   render();
 }
-``
+
 
 function updateViewButtonsAndTooltips() {
   const toggleBtn = document.getElementById('toggleFilterBtn');
@@ -2182,6 +2778,7 @@ function updateViewButtonsAndTooltips() {
 
 function showOrpProjects() {
   viewMode = 'orp';
+  localStorage.setItem('viewMode', viewMode);
   updateViewButtonsAndTooltips();
   render();
 }
@@ -2192,6 +2789,1484 @@ function formatDurationLabel(minutes) {
   if (m === 60) return '1 hour';
   if (m % 60 === 0) return `${m / 60} hours`;
   return `${m} mins`;
+}
+
+/* ================================
+   ADD EXISTING MEMBER MODAL
+================================ */
+
+
+
+function openExistingMemberModal(projectIndex) {
+  existingMemberModalProjectIndex = projectIndex;
+
+  // Get unique members across all projects
+  const data = getUniqueExistingMembers(projectIndex); // ✅ exclude current project's members
+
+
+  // Sort by name
+  data.sort((a, b) =>
+    (a.name || '').localeCompare(b.name || '', undefined, { sensitivity: 'base' })
+  );
+
+  // Ensure modal exists
+  ensureExistingMemberModal();
+
+  const overlay = document.getElementById('existingMemberModalOverlay');
+  overlay.style.display = 'flex';
+
+  overlay._selectedKeys = new Set();
+  overlay._allMembers = data;
+
+  renderExistingMemberModalList(data);
+  updateExistingMemberSelectedCount();
+
+
+  // ✅ Reset search field
+  const search = document.getElementById('existingMemberSearch');
+  if (search) {
+    search.value = '';
+    search.focus();
+  }
+}
+
+function closeExistingMemberModal() {
+  const overlay = document.getElementById('existingMemberModalOverlay');
+  if (overlay) overlay.style.display = 'none';
+  existingMemberModalProjectIndex = null;
+}
+
+
+function filterExistingMemberModalList(query) {
+  const overlay = document.getElementById('existingMemberModalOverlay');
+  if (!overlay || !overlay._allMembers) return;
+
+  const q = (query || '').trim().toLowerCase();
+  const filtered = !q
+    ? overlay._allMembers
+    : overlay._allMembers.filter(m => (m.name || '').toLowerCase().includes(q));
+
+  renderExistingMemberModalList(filtered);
+}
+
+function renderExistingMemberModalList(list) {
+  const rows = document.getElementById('existingMemberRows');
+  if (!rows) return;
+
+  const overlay = document.getElementById('existingMemberModalOverlay');
+  const selected = overlay?._selectedKeys || new Set();
+
+  if (!list || list.length === 0) {
+    rows.innerHTML = `
+      <div class="modal-row">
+        <div></div>
+        <div class="muted">No matches</div>
+        <div></div>
+        <div></div>
+      </div>
+    `;
+    return;
+  }
+
+  rows.innerHTML = list.map(m => {
+    const checked = selected.has(m.key) ? 'checked' : '';
+    return `
+      <div class="modal-row">
+        <div>
+          <input type="checkbox"
+                ${checked}
+                data-key="${escapeHtml(m.key)}"
+                onchange="toggleExistingMemberSelection(this.dataset.key, this.checked)"
+                onclick="event.stopPropagation()">
+        </div>
+
+        <div>${escapeHtml(m.name || 'No Name')}</div>
+        <div class="muted">${escapeHtml(m.email || 'No Email')}</div>
+        <div><span class="modal-pill">${escapeHtml(m.groupLabel || 'No Group')}</span></div>
+      </div>
+    `;
+  }).join('');
+}
+
+function updateExistingMemberSelectedCount() {
+  const overlay = document.getElementById('existingMemberModalOverlay');
+  const count = overlay && overlay._selectedKeys ? overlay._selectedKeys.size : 0;
+
+  const el = document.getElementById('existingMemberSelectedCount');
+  if (el) el.textContent = `Selected: ${count}`;
+}
+
+function toggleExistingMemberSelection(memberKey, checked) {
+  const overlay = document.getElementById('existingMemberModalOverlay');
+  if (!overlay) return;
+
+  overlay._selectedKeys ??= new Set();
+
+  if (checked) overlay._selectedKeys.add(memberKey);
+  else overlay._selectedKeys.delete(memberKey);
+
+  updateExistingMemberSelectedCount();
+}
+
+function clearExistingMemberSelection() {
+  const overlay = document.getElementById('existingMemberModalOverlay');
+  if (!overlay) return;
+
+  overlay._selectedKeys = new Set();
+  updateExistingMemberSelectedCount();
+
+  // Re-render current filtered view (preserve search text)
+  const q = (document.getElementById('existingMemberSearch')?.value || '').trim();
+  filterExistingMemberModalList(q);
+}
+
+function addSelectedExistingMembers() {
+  if (existingMemberModalProjectIndex == null) return;
+
+  const overlay = document.getElementById('existingMemberModalOverlay');
+  const selectedKeys = overlay?._selectedKeys ? Array.from(overlay._selectedKeys) : [];
+
+  if (selectedKeys.length === 0) {
+    showCopyToast('No members selected');
+    return;
+  }
+
+  const all = overlay?._allMembers || [];
+  const project = projects[existingMemberModalProjectIndex];
+  project.members = project.members || [];
+
+  // Prevent duplicates within the same project (name+email)
+  const existingSet = new Set(
+    project.members.map(m =>
+      `${(m.name || '').trim().toLowerCase()}|${(m.email || '').trim().toLowerCase()}`
+    )
+  );
+
+  let added = 0;
+  let skipped = 0;
+
+  selectedKeys.forEach(key => {
+    const found = all.find(m => m.key === key);
+    if (!found) return;
+
+    const name = (found.name || '').trim() || 'No Name';
+    const email = (found.email || '').trim() || 'No Email';
+
+    const dupKey = `${name.toLowerCase()}|${email.toLowerCase()}`;
+    if (existingSet.has(dupKey)) {
+      skipped++;
+      return;
+    }
+
+    // Groups: if No Group, use []
+    const groupsStr = (found.groupValue === '__NO_GROUP__') ? '' : (found.groupValue || '');
+    const groupsArr = groupsStr
+      ? groupsStr.split(',').map(normalizeGroupName).filter(Boolean)
+      : [];
+
+    project.members.push({
+      name,
+      email,
+      groups: groupsArr,
+      includeInEmail: email !== 'No Email'
+    });
+
+    existingSet.add(dupKey);
+    added++;
+  });
+
+  save();
+  render();
+
+  showCopyToast(
+    skipped ? `${added} added, ${skipped} already existed` : `${added} member(s) added`
+  );
+
+  closeExistingMemberModal();
+}
+
+
+
+/* Build unique list across ALL projects, excluding members already on the current project.
+   Uniqueness is by: (name + email + group) CASE-INSENSITIVE */
+function getUniqueExistingMembers(excludeProjectIndex) {
+  const map = new Map();
+
+  // 1) Build exclude set from the current project (by name+email, case-insensitive)
+  const excludeSet = new Set();
+  const current = projects?.[excludeProjectIndex];
+
+  (current?.members || []).forEach(m => {
+    const name = (m?.name || '').trim().toLowerCase();
+    const email = (m?.email || '').trim().toLowerCase();
+    if (!name && !email) return;
+    excludeSet.add(`${name}|${email}`);
+  });
+
+  // 2) Gather members from all projects and de-dupe by name+email+group (case-insensitive)
+  (projects || []).forEach((p, pIdx) => {
+    (p.members || []).forEach(m => {
+      const rawName = (m?.name || '').trim() || 'No Name';
+      const rawEmail = (m?.email || '').trim() || 'No Email';
+
+      const nameLower = rawName.toLowerCase();
+      const emailLower = rawEmail.toLowerCase();
+
+      // ✅ EXCLUDE junk placeholder entries
+      if (emailLower === 'no email') return;
+
+      // ✅ Exclude anyone already on the current project (regardless of group)
+      if (excludeSet.has(`${nameLower}|${emailLower}`)) return;
+
+      // Normalize groups; if none -> special No Group token
+      const groupsRaw = (m.groups && m.groups.length)
+        ? m.groups.map(g => String(g || '').trim()).filter(Boolean)
+        : ['__NO_GROUP__'];
+
+      groupsRaw.forEach(g => {
+        const isNoGroup = (g === '__NO_GROUP__');
+
+        // Display label
+        const groupLabel = isNoGroup ? 'No Group' : normalizeGroupName(g);
+
+        // Key part for group should be case-insensitive
+        const groupKey = isNoGroup ? '__no_group__' : normalizeGroupKey(g); // already lowercased
+
+        // ✅ De-dupe key is fully case-insensitive
+        const key = `${nameLower}|${emailLower}|${groupKey}`;
+
+        if (!map.has(key)) {
+          map.set(key, {
+            key,                 // used by your modal selection
+            name: rawName,       // keep original (or use normalizeGroupName(rawName) if desired)
+            email: rawEmail,
+            groupLabel,
+            groupValue: isNoGroup ? '__NO_GROUP__' : groupLabel
+          });
+        }
+      });
+    });
+  });
+
+  return Array.from(map.values());
+}
+
+/* Safe HTML for modal rows */
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, s => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;'
+  }[s]));
+}
+
+/* ================================
+   ASSOCIATED DCNs
+================================ */
+
+
+function normalizeDCNKey(str) {
+  // Treat "DCN 123" and "dcn123" as duplicates
+  return String(str || '')
+    .trim()
+    .toUpperCase()
+    .replace(/\s+/g, ''); // remove all whitespace
+}
+
+function addDCN(projectIndex) {
+  const numEl = document.getElementById(`dcnNum-${projectIndex}`);
+  const descEl = document.getElementById(`dcnDesc-${projectIndex}`);
+
+  if (!numEl) return;
+
+  const numberRaw = (numEl.value || '').trim();
+  const descRaw = (descEl?.value || '').trim();
+
+  if (!numberRaw) return;
+
+  const key = normalizeDCNKey(numberRaw);
+
+  projects[projectIndex].dcns = projects[projectIndex].dcns || [];
+
+  const exists = projects[projectIndex].dcns.some(d =>
+    normalizeDCNKey(d.number) === key
+  );
+
+  if (exists) {
+    showCopyToast('DCN already added');
+    return;
+  }
+
+  projects[projectIndex].dcns.push({
+    number: numberRaw,
+    desc: descRaw
+  });
+
+  // clear inputs
+  numEl.value = '';
+  if (descEl) descEl.value = '';
+
+  save();
+  render();
+}
+
+/*Associated DCNs*/
+
+function dcnDragStart(projectIndex, dcnIndex) {
+  dragDCNProject = projectIndex;
+  dragDCNIndex = dcnIndex;
+}
+
+function dcnDragEnd() {
+  dragDCNProject = null;
+  dragDCNIndex = null;
+}
+
+function dcnDrop(projectIndex, targetIndex) {
+  if (dragDCNProject !== projectIndex) return;
+  if (dragDCNIndex === targetIndex) return;
+
+  const list = projects[projectIndex].dcns || [];
+  const [item] = list.splice(dragDCNIndex, 1);
+
+  const adjustedIndex =
+    dragDCNIndex < targetIndex ? targetIndex - 1 : targetIndex;
+
+  list.splice(adjustedIndex, 0, item);
+
+  save();
+  render();
+}
+
+function editDCN(projectIndex, dcnIndex) {
+  const item = projects[projectIndex].dcns[dcnIndex];
+  if (!item) return;
+
+  let nextNum = prompt("Edit DCN Number (e.g., DCN 123)", item.number || '');
+  if (nextNum === null) return;
+  nextNum = nextNum.trim();
+  if (!nextNum) return;
+
+  let nextDesc = prompt("Edit DCN Description", item.desc || '');
+  if (nextDesc === null) return;
+  nextDesc = nextDesc.trim();
+
+  // Prevent duplicates by DCN number (excluding the one being edited)
+  const nextKey = normalizeDCNKey(nextNum);
+  const dup = (projects[projectIndex].dcns || []).some((d, idx) =>
+    idx !== dcnIndex && normalizeDCNKey(d.number) === nextKey
+  );
+
+  if (dup) {
+    showCopyToast('DCN already added');
+    return;
+  }
+
+  item.number = nextNum;
+  item.desc = nextDesc;
+
+  save();
+  render();
+}
+
+function deleteDCN(projectIndex, dcnIndex) {
+  projects[projectIndex].dcns.splice(dcnIndex, 1);
+  save();
+  render();
+}
+
+function addRaidItem(projectIndex) {
+  const type = document.getElementById(`raidType-${projectIndex}`).value;
+  const title = document.getElementById(`raidTitle-${projectIndex}`).value.trim();
+  const desc = document.getElementById(`raidDesc-${projectIndex}`).value.trim();
+  const assigned = document.getElementById(`raidAssigned-${projectIndex}`).value;
+
+  if (!type || !title) return; // minimal validation
+
+  projects[projectIndex].raid.push({
+    type,
+    title,
+    desc,
+    assigned
+  });
+
+  document.getElementById(`raidTitle-${projectIndex}`).value = '';
+  document.getElementById(`raidDesc-${projectIndex}`).value = '';
+  document.getElementById(`raidType-${projectIndex}`).value = '';
+  document.getElementById(`raidAssigned-${projectIndex}`).value = '';
+
+  save();
+  render();
+}
+
+function editRaidItem(projectIndex, index) {
+  const item = projects[projectIndex].raid[index];
+
+  let type = prompt("Edit Type (Risk, Assumption, Issue, Dependency)", item.type);
+  if (type === null) return;
+
+  if (!['Risk','Assumption','Issue','Dependency'].includes(type)) {
+    alert("Invalid type");
+    return;
+  }
+
+  const title = prompt("Edit Title", item.title);
+  if (title === null) return;
+
+  const desc = prompt("Edit Description", item.desc || '');
+  if (desc === null) return;
+
+  const assigned = prompt("Assign to (must match member name or leave blank)", item.assigned || '');
+  if (assigned === null) return;
+
+  item.type = type;
+  item.title = title.trim() || item.title;
+  item.desc = desc.trim();
+  item.assigned = assigned.trim();
+
+  save();
+  render();
+}
+
+function deleteRaidItem(projectIndex, index) {
+  projects[projectIndex].raid.splice(index, 1);
+  save();
+  render();
+}
+
+
+function raidDragStart(projectIndex, index) {
+  dragRaidProject = projectIndex;
+  dragRaidIndex = index;
+}
+
+function raidDragEnd() {
+  dragRaidProject = null;
+  dragRaidIndex = null;
+}
+
+function raidDrop(projectIndex, targetIndex) {
+  if (dragRaidProject !== projectIndex) return;
+  if (dragRaidIndex === targetIndex) return;
+
+  const list = projects[projectIndex].raid;
+  const [item] = list.splice(dragRaidIndex, 1);
+
+  const adjusted =
+    dragRaidIndex < targetIndex ? targetIndex - 1 : targetIndex;
+
+  list.splice(adjusted, 0, item);
+
+  save();
+  render();
+}
+
+function ensureExistingMemberModal() {
+  let overlay = document.getElementById('existingMemberModalOverlay');
+  if (overlay) return;
+
+  overlay = document.createElement('div');
+  overlay.id = 'existingMemberModalOverlay';
+  overlay.className = 'modal-overlay';
+  overlay.style.display = 'none';
+
+  overlay.innerHTML = `
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="existingMemberModalTitle">
+      <div class="modal-header">
+        <div>
+          <div id="existingMemberModalTitle" class="modal-title">Add Existing Member</div>
+          <div class="modal-subtitle">
+            Pick from members across all projects (duplicates removed)
+            <span id="existingMemberSelectedCount" class="muted" style="margin-left:10px;">Selected: 0</span>
+          </div>
+        </div>
+
+        <!-- ✅ TOP-RIGHT: Only Add + Clear -->
+        <div style="display:flex; gap:10px;">
+          <button class="btn-tiny" onclick="addSelectedExistingMembers()">Add</button>
+          <button class="btn-secondary btn-tiny" onclick="clearExistingMemberSelection()">Clear</button>
+          <!-- Separator -->
+          <span class="modal-separator" style="color:var(--separator-hard); font-weight:600;">│</span>
+          <button class="btn-secondary" onclick="closeExistingMemberModal()">Close</button>
+        </div>
+      </div>
+
+      <div class="modal-body">
+        <input
+          id="existingMemberSearch"
+          class="modal-search"
+          placeholder="Search by name..."
+          oninput="filterExistingMemberModalList(this.value)"
+        />
+
+        <div class="modal-list">
+          <div class="modal-list-header">
+            <div></div>
+            <div>Name</div>
+            <div>Email</div>
+            <div>Group</div>
+          </div>
+
+          <div id="existingMemberRows" class="modal-rows"></div>
+        </div>
+      </div>
+
+      
+      <div class="modal-footer">
+        <div style="height:20px; display:flex;">
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Click outside card closes
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) closeExistingMemberModal();
+  });
+
+  // ESC closes
+  document.addEventListener('keydown', (e) => {
+    const open = overlay.style.display === 'flex';
+    if (open && e.key === 'Escape') closeExistingMemberModal();
+  });
+
+  document.body.appendChild(overlay);
+}
+
+/* ================================
+   EMAIL TEMPLATES (rich body + modal)
+================================ */
+
+
+function emailTemplateDragStart(projectIndex, idx) {
+  dragEmailTemplateProject = projectIndex;
+  dragEmailTemplateIndex = idx;
+}
+
+function emailTemplateDragEnd() {
+  dragEmailTemplateProject = null;
+  dragEmailTemplateIndex = null;
+}
+
+function emailTemplateDrop(projectIndex, targetIndex) {
+  if (dragEmailTemplateProject !== projectIndex) return;
+  if (dragEmailTemplateIndex === targetIndex) return;
+
+  const list = projects[projectIndex].emailTemplates || [];
+  const [item] = list.splice(dragEmailTemplateIndex, 1);
+
+  const adjusted =
+    dragEmailTemplateIndex < targetIndex ? targetIndex - 1 : targetIndex;
+
+  list.splice(adjusted, 0, item);
+  projects[projectIndex].emailTemplates = list;
+
+  save();
+  render();
+}
+
+function openEmailTemplateModal(projectIndex, templateIndex = null) {
+  emailTemplateModalProjectIndex = projectIndex;
+  emailTemplateModalEditIndex = (templateIndex === null ? null : templateIndex);
+
+  ensureEmailTemplateModal();
+
+  const overlay = document.getElementById('emailTemplateModalOverlay');
+  overlay.style.display = 'flex';
+
+  const isEdit = emailTemplateModalEditIndex !== null;
+
+  const saveBtn = document.getElementById('emailTplSaveBtn');
+  if (saveBtn) saveBtn.textContent = isEdit ? 'Update Template' : 'Add Template';
+
+  const nameEl = document.getElementById('emailTplName');
+  const subjEl = document.getElementById('emailTplSubject');
+  const bodyEl = document.getElementById('emailTplBody');
+
+  const t = isEdit ? (projects[projectIndex].emailTemplates || [])[templateIndex] : null;
+
+  if (nameEl) nameEl.value = t?.name || '';
+  if (subjEl) subjEl.value = t?.subject || '';
+  if (bodyEl) bodyEl.innerHTML = t?.bodyHtml || '';
+
+  // Load To + CC emails into temp state
+  emailTplToEmails = t?.toEmails ? JSON.parse(JSON.stringify(t.toEmails)) : [];
+  emailTplCcEmails = t?.ccEmails ? JSON.parse(JSON.stringify(t.ccEmails)) : [];
+  renderEmailTplToList();
+  renderEmailTplCcList();
+
+  setTimeout(() => nameEl?.focus(), 0);
+}
+
+function closeEmailTemplateModal() {
+  const overlay = document.getElementById('emailTemplateModalOverlay');
+  if (overlay) overlay.style.display = 'none';
+  emailTemplateModalProjectIndex = null;
+  emailTemplateModalEditIndex = null;
+}
+
+function clearEmailTemplateModal() {
+  const nameEl = document.getElementById('emailTplName');
+  const subjEl = document.getElementById('emailTplSubject');
+  const bodyEl = document.getElementById('emailTplBody');
+
+  if (nameEl) nameEl.value = '';
+  if (subjEl) subjEl.value = '';
+  if (bodyEl) bodyEl.innerHTML = '';
+
+  emailTplToEmails = [];
+  emailTplCcEmails = [];
+  renderEmailTplToList();
+  renderEmailTplCcList();
+
+  showCopyToast('Cleared');
+}
+
+function sanitizeHtml(html) {
+  try {
+    const doc = new DOMParser().parseFromString(String(html || ''), 'text/html');
+    doc.querySelectorAll('script, style').forEach(n => n.remove());
+    return doc.body.innerHTML;
+  } catch {
+    return String(html || '');
+  }
+}
+
+function saveEmailTemplateFromModal() {
+  if (emailTemplateModalProjectIndex == null) return;
+
+  const nameEl = document.getElementById('emailTplName');
+  const subjEl = document.getElementById('emailTplSubject');
+  const bodyEl = document.getElementById('emailTplBody');
+
+  const name = (nameEl?.value || '').trim();
+  const subject = (subjEl?.value || '').trim();
+  const bodyHtmlRaw = bodyEl?.innerHTML || '';
+  const bodyHtml = sanitizeHtml(bodyHtmlRaw);
+
+  if (!name) {
+    showCopyToast('Template Name is required');
+    nameEl?.focus();
+    return;
+  }
+
+  const project = projects[emailTemplateModalProjectIndex];
+  project.emailTemplates = project.emailTemplates || [];
+
+  const payload = {
+    name,
+    subject,
+    bodyHtml,
+    toEmails: JSON.parse(JSON.stringify(emailTplToEmails)),
+    ccEmails: JSON.parse(JSON.stringify(emailTplCcEmails))
+  };
+
+  if (emailTemplateModalEditIndex === null) {
+    project.emailTemplates.push(payload);
+    showCopyToast('Template added');
+  } else {
+    project.emailTemplates[emailTemplateModalEditIndex] = payload;
+    showCopyToast('Template updated');
+  }
+
+  save();
+  render();
+  closeEmailTemplateModal();
+}
+
+function deleteEmailTemplate(projectIndex, templateIndex) {
+  projects[projectIndex].emailTemplates.splice(templateIndex, 1);
+  save();
+  render();
+}
+
+function copyEmailTemplateSubject(projectIndex, templateIndex) {
+  const t = (projects[projectIndex].emailTemplates || [])[templateIndex];
+  const text = t?.subject || '';
+  navigator.clipboard.writeText(text)
+    .then(() => showCopyToast('Subject copied'))
+    .catch(() => showCopyToast('Copy failed'));
+}
+
+function htmlToPlainText(html) {
+  const div = document.createElement('div');
+  div.innerHTML = String(html || '');
+  return (div.textContent || div.innerText || '').trim();
+}
+
+// async function copyRichHtml(html) {
+//   const plain = htmlToPlainText(html);
+
+//   function listener(e) {
+//     e.clipboardData.setData("text/html", html);
+//     e.clipboardData.setData("text/plain", plain);
+//     e.preventDefault();
+//   }
+
+//   document.addEventListener("copy", listener);
+//   document.execCommand("copy");
+//   document.removeEventListener("copy", listener);
+
+//   return true;
+// }
+
+async function copyRichHtml(html) {
+  const plain = htmlToPlainText(html);
+
+  // Wrap in full doc structure so Outlook / Windows CF_HTML parses it properly
+  const wrappedHtml = [
+    '<html><head><meta charset="utf-8"></head><body>',
+    '<!--StartFragment-->',
+    html,
+    '<!--EndFragment-->',
+    '</body></html>'
+  ].join('');
+
+  try {
+    // Create blobs SYNCHRONOUSLY before any await
+    const htmlBlob = new Blob([wrappedHtml], { type: 'text/html' });
+    const textBlob = new Blob([plain], { type: 'text/plain' });
+
+    const item = new ClipboardItem({
+      'text/html': htmlBlob,
+      'text/plain': textBlob
+    });
+
+    await navigator.clipboard.write([item]);
+    return true;
+
+  } catch (err) {
+    console.warn('Clipboard API failed:', err);
+
+    // Fallback: the clipboardData approach that already works for you
+    try {
+      function listener(e) {
+        e.clipboardData.setData("text/html", html);
+        e.clipboardData.setData("text/plain", plain);
+        e.preventDefault();
+      }
+      document.addEventListener("copy", listener);
+      document.execCommand("copy");
+      document.removeEventListener("copy", listener);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+}
+
+
+function copyEmailTemplateBody(projectIndex, templateIndex) {
+  const t = (projects[projectIndex].emailTemplates || [])[templateIndex];
+  const html = t?.bodyHtml || '';
+  copyRichHtml(html)
+    .then((rich) => showCopyToast(rich ? 'Body copied (rich)' : 'Body copied (plain)'))
+    .catch(() => showCopyToast('Copy failed'));
+}
+
+/* Basic rich text commands (optional toolbar buttons) */
+function editorCmd(cmd, value = null) {
+  const body = document.getElementById('emailTplBody');
+  body?.focus();
+  document.execCommand(cmd, false, value);
+}
+
+function ensureEmailTemplateModal() {
+  let overlay = document.getElementById('emailTemplateModalOverlay');
+  if (overlay) return;
+
+  overlay = document.createElement('div');
+  overlay.id = 'emailTemplateModalOverlay';
+  overlay.className = 'modal-overlay';
+  overlay.style.display = 'none';
+
+  overlay.innerHTML = `
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="emailTemplateModalTitle">
+      <div class="modal-header">
+        <div>
+          <div id="emailTemplateModalTitle" class="modal-title">Email Template</div>
+          <div class="modal-subtitle">Create reusable subjects and rich email bodies</div>
+        </div>
+
+        <div style="display:flex; gap:10px; align-items:center;">
+          <button id="emailTplSaveBtn" class="btn-tiny" onclick="saveEmailTemplateFromModal()">Add Template</button>
+          <button class="btn-secondary btn-tiny" onclick="clearEmailTemplateModal()">Clear</button>
+          <span class="modal-separator" style="color:var(--separator-hard); font-weight:600;">│</span>
+          <button class="btn-secondary" onclick="closeEmailTemplateModal()">Close</button>
+        </div>
+      </div>
+
+      <div class="modal-body" style="max-height:70vh; overflow:auto;">
+
+        <!-- TO SECTION -->
+        <div style="display:flex; align-items:center; gap:10px; margin-top:4px;">
+          <label class="small" style="font-weight:700; margin:0;">To</label>
+          <button class="btn-shorter" type="button" onclick="openEmailToPickerModal()" style="font-size:12px; padding:4px 10px;">
+            Add Emails
+          </button>
+        </div>
+        <div id="emailTplToListContainer" style="display:flex; flex-direction:column; gap:0;"></div>
+
+        <!-- CC SECTION -->
+        <div style="display:flex; align-items:center; gap:10px; margin-top:4px;">
+          <label class="small" style="font-weight:700; margin:0;">Cc</label>
+          <button class="btn-shorter" type="button" onclick="openEmailCcPickerModal()" style="font-size:12px; padding:4px 10px;">
+            Add Emails
+          </button>
+        </div>
+        <div id="emailTplCcListContainer" style="display:flex; flex-direction:column; gap:0;"></div>
+
+
+        <label class="small" style="font-weight:700;">Template Name</label>
+        <input id="emailTplName" class="modal-search" placeholder="e.g., Weekly Status Update" />
+
+        <label class="small" style="font-weight:700;">Email Subject</label>
+        <input id="emailTplSubject" class="modal-search" placeholder="e.g., Project X – Weekly Status" />
+
+
+        <label class="small" style="font-weight:700;">Email Body (rich)</label>
+
+        <div class="editor-toolbar">
+          <button class="btn-secondary" type="button" onclick="editorCmd('bold')"><b>B</b></button>
+          <button class="btn-secondary" type="button" onclick="editorCmd('italic')"><i>I</i></button>
+          <button class="btn-secondary" type="button" onclick="editorCmd('underline')"><u>U</u></button>
+          <button class="btn-secondary" type="button" onclick="editorCmd('insertUnorderedList')">• List</button>
+          <button class="btn-secondary" type="button" onclick="editorCmd('formatBlock','H2')">H2</button>
+          <button class="btn-secondary" type="button" onclick="editorCmd('removeFormat')">Clear format</button>
+          <span class="small" style="color:var(--text-muted); margin-left:auto;">
+            Tip: paste from Outlook/Word to preserve formatting
+          </span>
+        </div>
+
+        <div
+          id="emailTplBody"
+          class="rich-editor"
+          contenteditable="true"
+          spellcheck="true"
+        ></div>
+      </div>
+
+      <div class="modal-footer">
+        <div style="height:20px; display:flex;"></div>
+      </div>
+    </div>
+  `;
+
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) closeEmailTemplateModal();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    const open = overlay.style.display === 'flex';
+    if (open && e.key === 'Escape') {
+      const toPicker = document.getElementById('emailToPickerOverlay');
+      if (toPicker && toPicker.style.display === 'flex') return;
+      const ccPicker = document.getElementById('emailCcPickerOverlay');
+      if (ccPicker && ccPicker.style.display === 'flex') return;
+      closeEmailTemplateModal();
+    }
+  });
+
+  document.body.appendChild(overlay);
+}
+
+/* ================================
+   EMAIL TEMPLATE — "To" LIST
+================================ */
+
+function renderEmailTplToList() {
+  const container = document.getElementById('emailTplToListContainer');
+  if (!container) return;
+
+  if (emailTplToEmails.length === 0) {
+    container.innerHTML = '<span class="small" style="color:var(--text-muted); padding:4px 0;">No recipients added yet</span>';
+    return;
+  }
+
+  container.innerHTML = emailTplToEmails.map((r, idx) => `
+    <div
+      class="emailtpl-to-item"
+      draggable="true"
+      ondragstart="emailToDragStart(${idx})"
+      ondragend="emailToDragEnd()"
+      ondragover="event.preventDefault()"
+      ondrop="emailToDrop(${idx})"
+    >
+      <span class="to-name">${escapeHtml(r.name)}</span>
+      <span class="to-email">(${escapeHtml(r.email)})</span>
+
+      <button
+        onclick="event.stopPropagation(); deleteEmailTplTo(${idx})"
+        onmousedown="event.stopPropagation()"
+        draggable="false"
+        style="font-size:11px; padding:2px 6px;"
+      >🗑️</button>
+    </div>
+  `).join('');
+}
+
+function deleteEmailTplTo(index) {
+  emailTplToEmails.splice(index, 1);
+  renderEmailTplToList();
+}
+
+function emailToDragStart(index) {
+  dragEmailToIndex = index;
+}
+
+function emailToDragEnd() {
+  dragEmailToIndex = null;
+}
+
+function emailToDrop(targetIndex) {
+  if (dragEmailToIndex === null || dragEmailToIndex === targetIndex) return;
+
+  const [item] = emailTplToEmails.splice(dragEmailToIndex, 1);
+  const adjusted = dragEmailToIndex < targetIndex ? targetIndex - 1 : targetIndex;
+  emailTplToEmails.splice(adjusted, 0, item);
+
+  renderEmailTplToList();
+}
+
+
+/* ================================
+   EMAIL TO — PICKER MODAL
+================================ */
+
+function getAllUniqueMembersForEmail() {
+  const map = new Map();
+
+  projects.forEach(p => {
+    (p.members || []).forEach(m => {
+      const name  = (m.name  || '').trim() || 'No Name';
+      const email = (m.email || '').trim() || 'No Email';
+      if (email.toLowerCase() === 'no email') return;
+
+      const key = email.toLowerCase();
+      if (!map.has(key)) {
+        map.set(key, { key, name, email });
+      }
+    });
+  });
+
+  return Array.from(map.values()).sort((a, b) =>
+    a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
+  );
+}
+
+function openEmailToPickerModal() {
+  ensureEmailToPickerModal();
+
+  const overlay = document.getElementById('emailToPickerOverlay');
+  overlay.style.display = 'flex';
+
+  // Exclude emails already in the To list
+  const existingSet = new Set(emailTplToEmails.map(r => r.email.toLowerCase()));
+  const all = getAllUniqueMembersForEmail().filter(m => !existingSet.has(m.email.toLowerCase()));
+
+  overlay._allMembers = all;
+  overlay._selectedKeys = new Set();
+
+  renderEmailToPickerList(all);
+  updateEmailToPickerCount();
+
+  const search = document.getElementById('emailToPickerSearch');
+  if (search) { search.value = ''; search.focus(); }
+}
+
+function closeEmailToPickerModal() {
+  const overlay = document.getElementById('emailToPickerOverlay');
+  if (overlay) overlay.style.display = 'none';
+}
+
+function filterEmailToPickerList(query) {
+  const overlay = document.getElementById('emailToPickerOverlay');
+  if (!overlay || !overlay._allMembers) return;
+
+  const q = (query || '').trim().toLowerCase();
+  const filtered = !q
+    ? overlay._allMembers
+    : overlay._allMembers.filter(m =>
+        m.name.toLowerCase().includes(q) || m.email.toLowerCase().includes(q)
+      );
+
+  renderEmailToPickerList(filtered);
+}
+
+function renderEmailToPickerList(list) {
+  const rows = document.getElementById('emailToPickerRows');
+  if (!rows) return;
+
+  const overlay = document.getElementById('emailToPickerOverlay');
+  const selected = overlay?._selectedKeys || new Set();
+
+  if (!list || list.length === 0) {
+    rows.innerHTML = `
+      <div class="modal-row" style="grid-template-columns: 34px 1.2fr 1.6fr;">
+        <div></div>
+        <div class="muted">No matches</div>
+        <div></div>
+      </div>`;
+    return;
+  }
+
+  rows.innerHTML = list.map(m => {
+    const checked = selected.has(m.key) ? 'checked' : '';
+    return `
+      <div class="modal-row" style="grid-template-columns: 34px 1.2fr 1.6fr;">
+        <div>
+          <input type="checkbox"
+            ${checked}
+            data-key="${escapeHtml(m.key)}"
+            onchange="toggleEmailToPickerSelection(this.dataset.key, this.checked)"
+            onclick="event.stopPropagation()">
+        </div>
+        <div>${escapeHtml(m.name)}</div>
+        <div class="muted">${escapeHtml(m.email)}</div>
+      </div>`;
+  }).join('');
+}
+
+function toggleEmailToPickerSelection(key, checked) {
+  const overlay = document.getElementById('emailToPickerOverlay');
+  if (!overlay) return;
+
+  overlay._selectedKeys ??= new Set();
+  if (checked) overlay._selectedKeys.add(key);
+  else overlay._selectedKeys.delete(key);
+
+  updateEmailToPickerCount();
+}
+
+function updateEmailToPickerCount() {
+  const overlay = document.getElementById('emailToPickerOverlay');
+  const count = overlay?._selectedKeys ? overlay._selectedKeys.size : 0;
+  const el = document.getElementById('emailToPickerSelectedCount');
+  if (el) el.textContent = `Selected: ${count}`;
+}
+
+function clearEmailToPickerSelection() {
+  const overlay = document.getElementById('emailToPickerOverlay');
+  if (!overlay) return;
+
+  overlay._selectedKeys = new Set();
+  updateEmailToPickerCount();
+
+  const q = (document.getElementById('emailToPickerSearch')?.value || '').trim();
+  filterEmailToPickerList(q);
+}
+
+function addSelectedEmailToRecipients() {
+  const overlay = document.getElementById('emailToPickerOverlay');
+  const selectedKeys = overlay?._selectedKeys ? Array.from(overlay._selectedKeys) : [];
+
+  if (selectedKeys.length === 0) {
+    showCopyToast('No members selected');
+    return;
+  }
+
+  const all = overlay?._allMembers || [];
+  const existingSet = new Set(emailTplToEmails.map(r => r.email.toLowerCase()));
+  let added = 0;
+
+  selectedKeys.forEach(key => {
+    const found = all.find(m => m.key === key);
+    if (!found) return;
+    if (existingSet.has(found.email.toLowerCase())) return;
+
+    emailTplToEmails.push({ name: found.name, email: found.email });
+    existingSet.add(found.email.toLowerCase());
+    added++;
+  });
+
+  renderEmailTplToList();
+  showCopyToast(`${added} recipient(s) added`);
+  closeEmailToPickerModal();
+}
+
+function ensureEmailToPickerModal() {
+  let overlay = document.getElementById('emailToPickerOverlay');
+  if (overlay) return;
+
+  overlay = document.createElement('div');
+  overlay.id = 'emailToPickerOverlay';
+  overlay.className = 'modal-overlay';
+  overlay.style.display = 'none';
+  overlay.style.zIndex = '99999';          /* ✅ sits on top of the template modal */
+
+  overlay.innerHTML = `
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="emailToPickerTitle">
+      <div class="modal-header">
+        <div>
+          <div id="emailToPickerTitle" class="modal-title">Select Recipients</div>
+          <div class="modal-subtitle">
+            Pick members to add to the "To" list
+            <span id="emailToPickerSelectedCount" class="muted" style="margin-left:10px;">Selected: 0</span>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:10px;">
+          <button class="btn-tiny" onclick="addSelectedEmailToRecipients()">Add</button>
+          <button class="btn-secondary btn-tiny" onclick="clearEmailToPickerSelection()">Clear</button>
+          <span class="modal-separator" style="color:var(--separator-hard); font-weight:600;">│</span>
+          <button class="btn-secondary" onclick="closeEmailToPickerModal()">Close</button>
+        </div>
+      </div>
+
+      <div class="modal-body">
+        <input
+          id="emailToPickerSearch"
+          class="modal-search"
+          placeholder="Search by name or email..."
+          oninput="filterEmailToPickerList(this.value)"
+        />
+
+        <div class="modal-list">
+          <div class="modal-list-header" style="grid-template-columns: 34px 1.2fr 1.6fr;">
+            <div></div>
+            <div>Name</div>
+            <div>Email</div>
+          </div>
+
+          <div id="emailToPickerRows" class="modal-rows"></div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <div style="height:20px; display:flex;"></div>
+      </div>
+    </div>
+  `;
+
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) closeEmailToPickerModal();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (overlay.style.display === 'flex' && e.key === 'Escape') {
+      e.stopPropagation();
+      closeEmailToPickerModal();
+    }
+  });
+
+  document.body.appendChild(overlay);
+}
+
+
+/* ================================
+   COPY EMAILS (main page button)
+================================ */
+
+function copyEmailTemplateEmails(projectIndex, templateIndex) {
+  const t = (projects[projectIndex].emailTemplates || [])[templateIndex];
+  const emails = (t?.toEmails || []).map(r => r.email).filter(Boolean).join('; ');
+
+  if (!emails) {
+    showCopyToast('No emails to copy');
+    return;
+  }
+
+  navigator.clipboard.writeText(emails)
+    .then(() => showCopyToast('Emails copied'))
+    .catch(() => showCopyToast('Copy failed'));
+}
+
+/* ================================
+   EMAIL TEMPLATE — "CC" LIST
+================================ */
+
+function renderEmailTplCcList() {
+  const container = document.getElementById('emailTplCcListContainer');
+  if (!container) return;
+
+  if (emailTplCcEmails.length === 0) {
+    container.innerHTML = '<span class="small" style="color:var(--text-muted); padding:4px 0;">No Cc recipients added yet</span>';
+    return;
+  }
+
+  container.innerHTML = emailTplCcEmails.map((r, idx) => `
+    <div
+      class="emailtpl-cc-item"
+      draggable="true"
+      ondragstart="emailCcDragStart(${idx})"
+      ondragend="emailCcDragEnd()"
+      ondragover="event.preventDefault()"
+      ondrop="emailCcDrop(${idx})"
+    >
+      <span class="cc-name">${escapeHtml(r.name)}</span>
+      <span class="cc-email">(${escapeHtml(r.email)})</span>
+
+      <button
+        onclick="event.stopPropagation(); deleteEmailTplCc(${idx})"
+        onmousedown="event.stopPropagation()"
+        draggable="false"
+        style="font-size:11px; padding:2px 6px;"
+      >🗑️</button>
+    </div>
+  `).join('');
+}
+
+function deleteEmailTplCc(index) {
+  emailTplCcEmails.splice(index, 1);
+  renderEmailTplCcList();
+}
+
+function emailCcDragStart(index) {
+  dragEmailCcIndex = index;
+}
+
+function emailCcDragEnd() {
+  dragEmailCcIndex = null;
+}
+
+function emailCcDrop(targetIndex) {
+  if (dragEmailCcIndex === null || dragEmailCcIndex === targetIndex) return;
+
+  const [item] = emailTplCcEmails.splice(dragEmailCcIndex, 1);
+  const adjusted = dragEmailCcIndex < targetIndex ? targetIndex - 1 : targetIndex;
+  emailTplCcEmails.splice(adjusted, 0, item);
+
+  renderEmailTplCcList();
+}
+
+
+/* ================================
+   EMAIL CC — PICKER MODAL
+================================ */
+
+function openEmailCcPickerModal() {
+  ensureEmailCcPickerModal();
+
+  const overlay = document.getElementById('emailCcPickerOverlay');
+  overlay.style.display = 'flex';
+
+  // Exclude emails already in the CC list
+  const existingSet = new Set(emailTplCcEmails.map(r => r.email.toLowerCase()));
+  const all = getAllUniqueMembersForEmail().filter(m => !existingSet.has(m.email.toLowerCase()));
+
+  overlay._allMembers = all;
+  overlay._selectedKeys = new Set();
+
+  renderEmailCcPickerList(all);
+  updateEmailCcPickerCount();
+
+  const search = document.getElementById('emailCcPickerSearch');
+  if (search) { search.value = ''; search.focus(); }
+}
+
+function closeEmailCcPickerModal() {
+  const overlay = document.getElementById('emailCcPickerOverlay');
+  if (overlay) overlay.style.display = 'none';
+}
+
+function filterEmailCcPickerList(query) {
+  const overlay = document.getElementById('emailCcPickerOverlay');
+  if (!overlay || !overlay._allMembers) return;
+
+  const q = (query || '').trim().toLowerCase();
+  const filtered = !q
+    ? overlay._allMembers
+    : overlay._allMembers.filter(m =>
+        m.name.toLowerCase().includes(q) || m.email.toLowerCase().includes(q)
+      );
+
+  renderEmailCcPickerList(filtered);
+}
+
+function renderEmailCcPickerList(list) {
+  const rows = document.getElementById('emailCcPickerRows');
+  if (!rows) return;
+
+  const overlay = document.getElementById('emailCcPickerOverlay');
+  const selected = overlay?._selectedKeys || new Set();
+
+  if (!list || list.length === 0) {
+    rows.innerHTML = `
+      <div class="modal-row" style="grid-template-columns: 34px 1.2fr 1.6fr;">
+        <div></div>
+        <div class="muted">No matches</div>
+        <div></div>
+      </div>`;
+    return;
+  }
+
+  rows.innerHTML = list.map(m => {
+    const checked = selected.has(m.key) ? 'checked' : '';
+    return `
+      <div class="modal-row" style="grid-template-columns: 34px 1.2fr 1.6fr;">
+        <div>
+          <input type="checkbox"
+            ${checked}
+            data-key="${escapeHtml(m.key)}"
+            onchange="toggleEmailCcPickerSelection(this.dataset.key, this.checked)"
+            onclick="event.stopPropagation()">
+        </div>
+        <div>${escapeHtml(m.name)}</div>
+        <div class="muted">${escapeHtml(m.email)}</div>
+      </div>`;
+  }).join('');
+}
+
+function toggleEmailCcPickerSelection(key, checked) {
+  const overlay = document.getElementById('emailCcPickerOverlay');
+  if (!overlay) return;
+
+  overlay._selectedKeys ??= new Set();
+  if (checked) overlay._selectedKeys.add(key);
+  else overlay._selectedKeys.delete(key);
+
+  updateEmailCcPickerCount();
+}
+
+function updateEmailCcPickerCount() {
+  const overlay = document.getElementById('emailCcPickerOverlay');
+  const count = overlay?._selectedKeys ? overlay._selectedKeys.size : 0;
+  const el = document.getElementById('emailCcPickerSelectedCount');
+  if (el) el.textContent = `Selected: ${count}`;
+}
+
+function clearEmailCcPickerSelection() {
+  const overlay = document.getElementById('emailCcPickerOverlay');
+  if (!overlay) return;
+
+  overlay._selectedKeys = new Set();
+  updateEmailCcPickerCount();
+
+  const q = (document.getElementById('emailCcPickerSearch')?.value || '').trim();
+  filterEmailCcPickerList(q);
+}
+
+function addSelectedEmailCcRecipients() {
+  const overlay = document.getElementById('emailCcPickerOverlay');
+  const selectedKeys = overlay?._selectedKeys ? Array.from(overlay._selectedKeys) : [];
+
+  if (selectedKeys.length === 0) {
+    showCopyToast('No members selected');
+    return;
+  }
+
+  const all = overlay?._allMembers || [];
+  const existingSet = new Set(emailTplCcEmails.map(r => r.email.toLowerCase()));
+  let added = 0;
+
+  selectedKeys.forEach(key => {
+    const found = all.find(m => m.key === key);
+    if (!found) return;
+    if (existingSet.has(found.email.toLowerCase())) return;
+
+    emailTplCcEmails.push({ name: found.name, email: found.email });
+    existingSet.add(found.email.toLowerCase());
+    added++;
+  });
+
+  renderEmailTplCcList();
+  showCopyToast(`${added} CC recipient(s) added`);
+  closeEmailCcPickerModal();
+}
+
+function ensureEmailCcPickerModal() {
+  let overlay = document.getElementById('emailCcPickerOverlay');
+  if (overlay) return;
+
+  overlay = document.createElement('div');
+  overlay.id = 'emailCcPickerOverlay';
+  overlay.className = 'modal-overlay';
+  overlay.style.display = 'none';
+  overlay.style.zIndex = '99999';
+
+  overlay.innerHTML = `
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="emailCcPickerTitle">
+      <div class="modal-header">
+        <div>
+          <div id="emailCcPickerTitle" class="modal-title">Select CC Recipients</div>
+          <div class="modal-subtitle">
+            Pick members to add to the "CC" list
+            <span id="emailCcPickerSelectedCount" class="muted" style="margin-left:10px;">Selected: 0</span>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:10px;">
+          <button class="btn-tiny" onclick="addSelectedEmailCcRecipients()">Add</button>
+          <button class="btn-secondary btn-tiny" onclick="clearEmailCcPickerSelection()">Clear</button>
+          <span class="modal-separator" style="color:var(--separator-hard); font-weight:600;">│</span>
+          <button class="btn-secondary" onclick="closeEmailCcPickerModal()">Close</button>
+        </div>
+      </div>
+
+      <div class="modal-body">
+        <input
+          id="emailCcPickerSearch"
+          class="modal-search"
+          placeholder="Search by name or email..."
+          oninput="filterEmailCcPickerList(this.value)"
+        />
+
+        <div class="modal-list">
+          <div class="modal-list-header" style="grid-template-columns: 34px 1.2fr 1.6fr;">
+            <div></div>
+            <div>Name</div>
+            <div>Email</div>
+          </div>
+
+          <div id="emailCcPickerRows" class="modal-rows"></div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <div style="height:20px; display:flex;"></div>
+      </div>
+    </div>
+  `;
+
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) closeEmailCcPickerModal();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (overlay.style.display === 'flex' && e.key === 'Escape') {
+      e.stopPropagation();
+      closeEmailCcPickerModal();
+    }
+  });
+
+  document.body.appendChild(overlay);
+}
+
+
+/* ================================
+   COPY CC EMAILS (main page button)
+================================ */
+
+function copyEmailTemplateCCEmails(projectIndex, templateIndex) {
+  const t = (projects[projectIndex].emailTemplates || [])[templateIndex];
+  const emails = (t?.ccEmails || []).map(r => r.email).filter(Boolean).join('; ');
+
+  if (!emails) {
+    showCopyToast('No CC emails to copy');
+    return;
+  }
+
+  navigator.clipboard.writeText(emails)
+    .then(() => showCopyToast('CC emails copied'))
+    .catch(() => showCopyToast('Copy failed'));
+}
+
+function copyAllCheckedEmails(projectIndex) {
+  const emails = (projects[projectIndex].members || [])
+    .filter(m => m.includeInEmail && m.email && m.email.toLowerCase() !== 'no email')
+    .map(m => m.email)
+    .join('; ');
+
+  if (!emails) {
+    showCopyToast('No emails to copy');
+    return;
+  }
+
+  navigator.clipboard.writeText(emails)
+    .then(() => showCopyToast('All checked emails copied'))
+    .catch(() => showCopyToast('Copy failed'));
 }
 
 normalizeProjects();
