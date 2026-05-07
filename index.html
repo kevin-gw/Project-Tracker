@@ -229,18 +229,10 @@ textarea {
   border-radius: 9px;
 }
 
-.controls-row.full-width input#projectFilter {
-  width: 100%;
-}
-
 /* ================================
    PROJECT CARD
 ================================ */
 .project {
-  background: var(--bg-card);
-  padding: 14px;
-  margin-bottom: 14px;
-  border-radius: 16px;
   border: 1px solid var(--border-soft);
   /* transition: transform 0.12s ease, box-shadow 0.12s ease; */
   transition: box-shadow 0.18s ease, outline 0.18s ease;
@@ -251,7 +243,7 @@ textarea {
   border-radius: 16px;
   
   /* permanent outline */
-  outline: 2px solid rgba(79, 70, 229, 0.45);
+  outline: 3px solid rgba(79, 70, 229, 0.45);
 
   /* permanent soft glow */
   box-shadow:
@@ -266,14 +258,7 @@ textarea {
     0 12px 30px rgba(0,0,0,0.06);
 }
 
-.project.dragging {
-  opacity: 0.5;
-}
 
-.project.archive {
-  background: #f8fafc;
-  opacity: 0.85;
-}
 
 /* ================================
    PROJECT TITLE
@@ -312,13 +297,16 @@ textarea {
 }
 
 .project .project-name-secondary {
-  white-space: normal;        /* ✅ allow wrapping */
-  word-break: break-word;     /* ✅ break long words */
-  overflow-wrap: anywhere;    /* ✅ modern safety net */
-  min-width: 0;               /* ✅ CRITICAL for flexbox */
-  flex: 1 1 auto;             /* ✅ allows shrink + wrap */
-}
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 8px;
 
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  min-width: 0;                /* ← lets flexbox shrink it */
+  flex: 1 1 0;                 /* ← grow to fill, shrink freely */
+}
 
 /* ================================
    SMALL TEXT
@@ -350,27 +338,11 @@ textarea {
   opacity: 0.85;
 }
 
-.hyperlink-item {
-  cursor: grab;
-}
-
-.hyperlink-item:active {
-  cursor: grabbing;
-  opacity: 0.85;
-}
-
 .busops-row {
   display: flex;
   align-items: center;
   gap: 12px;
   flex-wrap: wrap; /* allows wrap on smaller screens */
-}
-
-.busops-inline {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  white-space: nowrap;
 }
 
 #busops-disciplines {
@@ -381,33 +353,15 @@ textarea {
  padding: 5px 14px;
 }
 
-/* Subtle pill around checkbox + label text */
 .chk-pill {
   display: inline-flex;
-  align-items.chk-pill input[type="checkbox"] {  align-items: center;
-  width: 16px;
-  height: 16px;
-  accent-color: var(--primary); /* modern browsers */
-}
-
-/* Disabled state (if you disable checkbox inputs) */
-.chk-pill input[type="checkbox"]:disabled + span,
-.chk-pill input[type="checkbox"]:disabled {
-  opacity: 0.6;
-}
+  align-items: center;
   gap: 8px;
 
   padding: 6px 10px;
   border-radius: 999px;
 
-  background: rgba(79, 70, 229, 0.06); /* soft indigo tint */
-  background: #f3f4f6; /* gray-100: very light neutral */
-  background: #f0f2f5; /* midpoint between #f3f4f6 and #eceff3 */
-  /*background: #eceff3; /* gray-150: subtle step darker */
-  /* background: #e5e7eb; /* gray-200: soft neutral (your border-soft) */
-  /* background: #dde3ea; /* gray-250: slightly darker than gray-200 */
-  /* background: #d1d5db; /* gray-300: noticeably darker, still subtle */
-  /* background: #cbd2da; /* gray-350: chip-like background, a bit stronger */
+  background: #f0f2f5;
   border: 1px solid rgba(79, 70, 229, 0.10);
 
   color: var(--text-main);
@@ -416,15 +370,15 @@ textarea {
   transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
-.chk-pill:hover {
-  background: rgba(79, 70, 229, 0.09);
-  border-color: rgba(79, 70, 229, 0.18);
+.chk-pill input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--primary);
 }
 
-/* When keyboard focusing the checkbox inside the pill */
-.chk-pill:focus-within {
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.18);
-  border-color: rgba(79, 70, 229, 0.30);
+.chk-pill input[type="checkbox"]:disabled + span,
+.chk-pill input[type="checkbox"]:disabled {
+  opacity: 0.6;
 }
 
 /* Targets ONLY the group header strong (Training/Ops/No Group) */
@@ -475,28 +429,20 @@ textarea {
 }
 
 
-
-.hyperlink-list > li {
-  margin-bottom: 3px;
-}
-
-
 /* Bulleted Classes */
 
 
 /* Comment in and out here */
 
-.bulleted-list{
+.bulleted-list {
   padding-left: 30px;
   font-size: 14px;
 }
 
-.bulleted-list >li{
+.bulleted-list > li{
   margin-bottom: 2px;
 }
 
-
-*/
 
 /* Hyperlink row */
 /* keep bullets + allow inner flex layout */
@@ -521,38 +467,30 @@ textarea {
   padding: 2px 20px;
 }
 
-/* Make sure list bullets show */
-.project .task-list {
-  margin: 8px 0 0;
-  padding-left: 30px;           /* controls indent */
-  list-style: disc;
-}
 
+/* ================================
+   ARCHIVING PROJECTS
+================================ */
 
-/* Control bullet size for tasks */
-.project .task-list > li::marker {
-  font-size: 12px;
-}
-
-/* Archived projects: darker, grayer, clearly "inactive" */
 .project.archive {
-  /* darker gray background shading */
-  background: #EEF1F2;                 /* soft gray */
-  border: 1px solid #D6DBE0;           /* slightly stronger border */
-
-  /* override the active indigo outline */
-  outline: 2px solid rgba(100, 116, 139, 0.55);  /* slate outline */
-  
-  /* override the active glow */
+  background: linear-gradient(135deg, #eaecf0 0%, #dcdfe5 100%);
+  border: 1px solid #a8adb8;
+  outline: 2px solid rgba(55, 65, 81, 0.45);
   box-shadow:
-    0 0 0 3px rgba(148, 163, 184, 0.20),         /* neutral ring instead of indigo */
-    0 1px 3px rgba(0,0,0,0.06),
-    0 8px 18px rgba(0,0,0,0.06);
-
-  /* slightly muted */
-  opacity: 0.92;
-  filter: saturate(0.85);
+    0 0 0 3px rgba(55, 65, 81, 0.14),
+    0 1px 4px rgba(0,0,0,0.06);
 }
+
+.project.archive:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    0 0 0 3px rgba(55, 65, 81, 0.20),
+    0 4px 12px rgba(0,0,0,0.08);
+}
+
+/* ================================
+   TASKS
+================================ */
 
 /* this is the font size of the tasks which are larger than normal*/
 .task-content > span{
@@ -561,77 +499,6 @@ textarea {
 
 .task-card::marker{
   font-size: 12px;
-}
-
-/* ================================
-   TOOLTIP (pure CSS)
-================================ */
-.has-tooltip {
-  position: relative; /* anchor for tooltip */
-}
-
-/* Tooltip bubble */
-.has-tooltip::after {
-  content: attr(data-tooltip);
-  position: absolute;
-  left: 50%;
-  top: calc(100% + 10px);
-  transform: translateX(-50%);
-
-  background: rgba(17, 24, 39, 0.92); /* near-black */
-  color: #fff;
-  padding: 7px 10px;
-  border-radius: 10px;
-
-  font-size: 12px;
-  font-weight: 600;
-  line-height: 1.2;
-  white-space: nowrap;
-
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.12s ease, transform 0.12s ease;
-
-  box-shadow: 0 10px 24px rgba(0,0,0,0.25);
-  z-index: 9999;
-}
-
-/* Tooltip little arrow */
-.has-tooltip::before {
-  content: "";
-  position: absolute;
-  left: 50%;
-  top: calc(100% + 4px);
-  transform: translateX(-50%);
-
-  border: 6px solid transparent;
-  border-bottom-color: rgba(17, 24, 39, 0.92);
-
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.12s ease, transform 0.12s ease;
-  z-index: 9999;
-}
-
-/* Show tooltip on hover + keyboard focus */
-.has-tooltip:hover::after,
-.has-tooltip:hover::before,
-.has-tooltip:focus-visible::after,
-.has-tooltip:focus-visible::before {
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
-}
-
-/* Tiny lift when appearing */
-.has-tooltip:hover::after,
-.has-tooltip:focus-visible::after {
-  transform: translateX(-50%) translateY(2px);
-}
-
-/* Meeting duration select a bit tighter */
-.meeting-duration {
-  width: 120px;
-  padding: 6px 8px;
 }
 
 /* ================================
@@ -770,6 +637,7 @@ textarea {
 .btn-secondary {
   background: linear-gradient(135deg, #64748b, #334155);
   box-shadow: 0 4px 14px rgba(51, 65, 85, 0.25);
+  font-size: 14px
 }
 
 .btn-secondary:hover {
@@ -783,29 +651,25 @@ textarea {
   font-size: 14px;
 }
 
-.btn-secondary{
-  font-size: 14px
+
+/* Actions stay right, never shrink */
+.project-actions {
+  position: static;
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  white-space: nowrap;
+  flex-shrink: 0;              /* ← never compress the buttons */
 }
 
-
+/* When the header row wraps, make actions take full width and right-align */
 .project-header-row {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 10px;
   width: 100%;
-  flex-wrap: wrap; /* ✅ allows wrap on small screens */
-}
-
-.project-actions {
-  position: absolute;
-  top: 15px;
-  right: 14px;
-
-  display: flex;
-  align-items: center;
-  gap: 10px;
-
-  white-space: nowrap; /* ✅ keeps buttons on one line */
+  flex-wrap: wrap;
 }
 
 .member-email-li{
@@ -963,6 +827,74 @@ textarea {
   margin-top: 14px;
 }
 
+/* Search Projects modal */
+.search-project-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border-soft);
+  font-size: 14px;
+}
+
+.search-project-row:last-child {
+  border-bottom: none;
+}
+
+.search-project-name {
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.search-project-status {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+  margin-left: 8px;
+}
+
+/* Collapsed project: hide everything after the description */
+.project.collapsed .collapsible-content {
+  display: none;
+}
+
+/* Collapse/Expand toggle button */
+.btn-collapse {
+  font-size: 12px;
+  padding: 4px 10px;
+  white-space: nowrap;
+}
+
+/* ================================
+   CONFIRM DELETE MODAL
+================================ */
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(17, 24, 39, 0.55);
+  backdrop-filter: blur(2px);
+  z-index: 99999;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+}
+
+.confirm-card {
+  width: min(420px, 92vw);
+  background: var(--bg-card);
+  border: 1px solid var(--border-soft);
+  border-radius: 18px;
+  box-shadow:
+    0 10px 30px rgba(0,0,0,0.22),
+    0 1px 3px rgba(0,0,0,0.08);
+  padding: 24px 28px;
+  text-align: center;
+}
+
 </style>
 </head>
 <body>
@@ -975,41 +907,40 @@ textarea {
   <div class="controls-row">
     <input id="newProjectName" class="top-input" placeholder="New project name" onkeydown="if(event.key==='Enter'){ event.preventDefault(); addProject(); }" />
     <button onclick="addProject()">Add Project</button>
+    <button onclick="openSearchProjectsModal()">Search Projects</button>
 
-    <button
-      id="toggleFilterBtn"
-      class="has-tooltip"
-      data-tooltip="Showing: Active projects only"
-      onclick="toggleFilterMode()"
-    >
-      Show Archived Only
-    </button>
+    <label style="display:flex; align-items:center; gap:6px; font-size:13px; font-weight:600;">
+      Filter Projects
+    <select id="viewModeSelect" onchange="changeViewMode(this.value)">
+      <option value="" disabled hidden></option>
+      <option value="all">Show All</option>
+      <option value="active">Show Active</option>
+      <option value="archived">Show Archived</option>
+      <option value="orp">Show ORP Related</option>
+      <option value="general">Show General Template</option>
+    </select>
+    </label>
 
-    <button
-      id="showAllBtn"
-      class="has-tooltip"
-      data-tooltip="Showing: All projects (Active + Archived)"
-      onclick="showAllProjects()"
-    >
-      Show All
-    </button>
+    <label style="display:flex; align-items:center; gap:6px; font-size:13px; font-weight:600;">
+          Sort
+            <select id="sortModeSelect" onchange="changeSortMode(this.value)">
+              <option value="">None</option>
+              <option value="alpha">Sort Alphabetically</option>
+              <option value="default">Sort Default</option>
+            </select>
+    </label>
 
-    <button
-      id="showOrpBtn"
-      class="has-tooltip"
-      data-tooltip="Click to show ORP-related projects only"
-      onclick="showOrpProjects()"
-    >
-      Show ORP Related
-    </button>
+    <label style="display:flex; align-items:center; gap:6px; font-size:13px; font-weight:600;">
+      Collapse
+      <select id="collapseModeSelect" onchange="changeCollapseMode(this.value)">
+        <option value="" disabled hidden></option>
+        <option value="collapse">Collapse All</option>
+        <option value="expand">Expand All</option>
+      </select>
+    </label>
 
     <button onclick="exportData()">Export Data</button>
     <button onclick="openImportModal()">Import Data</button>
-  </div>
-  <div class="controls-row full-width top-input">
-  <input id="projectFilter"
-        placeholder="Filter projects..."
-        oninput="saveFilter(); render()" />
   </div>
 </div>
 
@@ -1028,9 +959,7 @@ const validModes = ['active', 'archived', 'all', 'orp'];
 let viewMode = validModes.includes(localStorage.getItem('viewMode'))
   ? localStorage.getItem('viewMode')
   : 'active';
-let dragIndex = null;
-let dragMember = null;
-let dragTask = null;
+
 let dragMemberProject = null;
 let dragMemberIndex = null;
 let dragWBSProject = null;
@@ -1057,16 +986,16 @@ let dragEmailToIndex = null;
 let emailTplCcEmails = [];
 let dragEmailCcIndex = null;
 
-const savedFilter = localStorage.getItem('projectFilter') || '';
+let sortMode = localStorage.getItem('sortMode') || '';
 
-const filterInput = document.getElementById('projectFilter');
-if (filterInput) {
-  filterInput.value = savedFilter;
-}
+let focusedProjectIndex = localStorage.getItem('focusedProjectIndex') !== null
+  ? parseInt(localStorage.getItem('focusedProjectIndex'), 10)
+  : null;
 
+let pendingDeleteIndex = null;
 
 function render() {
-  const filter = document.getElementById('projectFilter').value.trim().toLowerCase();
+
 
   document.getElementById('activeCount').innerText =
     `Active Projects: ${projects.filter(p => !p.archived).length}`;
@@ -1089,40 +1018,38 @@ function render() {
 
 
   const container = document.getElementById('projectList');
+
+  // Build sorted index order
+    let renderOrder = projects.map((_, i) => i);
+
+    if (sortMode === 'alpha') {
+      renderOrder.sort((a, b) =>
+        (projects[a].name || '').localeCompare(projects[b].name || '', undefined, { sensitivity: 'base' })
+      );
+    }
+
   container.innerHTML = '';
 
-  projects.forEach((_, i) => {
-  const p = projects[i]; // ✅ force fresh state reference
+  renderOrder.forEach(i => {
+    const p = projects[i];
     // Filter based on viewMode
     if (viewMode === 'active' && p.archived) return;
     if (viewMode === 'archived' && !p.archived) return;
     if (viewMode === 'orp' && !p.orpRelated) return;
+    if (viewMode === 'general' && p.name !== 'General Project') return;
     // viewMode === 'all' shows everything
 
-    if (filter && !p.name.toLowerCase().includes(filter)) return;
+    // Single-project focus (from Search Projects modal)
+    if (focusedProjectIndex !== null && i !== focusedProjectIndex) return;
+
 
     const div = document.createElement('div');
-    div.className = 'project' + (p.archived?' archive':'');
-    div.draggable = true;
+    div.className = 'project' + (p.archived ? ' archive' : '') + (p.collapsed ? ' collapsed' : '');
 
-    div.ondragstart = ()=>{ dragIndex=i; div.classList.add('dragging'); };
-    div.ondragend = ()=> div.classList.remove('dragging');
-    div.ondragover = e=>e.preventDefault();
-    div.ondrop = ()=>{
-      const temp = projects[dragIndex];
-      projects.splice(dragIndex,1);
-      projects.splice(i,0,temp);
-      save(); render();
-    };
+
+
 div.innerHTML = `
-  <div class="project-header-row"
-    style="
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      width: 100%;
-    "
-  >
+  <div class="project-header-row">
     <!-- Project Name -->
     <strong
       contenteditable="false"
@@ -1149,53 +1076,55 @@ div.innerHTML = `
       ${p.name2 || ''}
     </strong>
 
-    <!-- FLEX SPACER -->
-    <!-- <div style="flex: 1;"></div> -->
+<!-- ✅ Actions: no inline flex override needed anymore -->
+    <div class="project-actions">
+      <!-- Active Indicator -->
+      <span
+        class="small"
+        style="
+          font-size:14px;
+          white-space:nowrap;
+          padding:4px 11px;
+          border-radius:999px;
+          font-weight:600;
+          background:${p.archived
+            ? 'rgba(220,38,38,0.15)'
+            : 'rgba(22,163,74,0.15)'};
+          color:${p.archived
+            ? '#dc2626'
+            : '#16a34a'};
+        "
+      >
+        ${p.archived ? 'Archived' : 'Active'}
+      </span>
 
-    </div>
+      <!-- Separator -->
+      <span style="color:var(--border-soft); font-weight:600;">│</span>
 
-      <div class="project-actions">
-        <!-- Active Indicator -->
-        <span
-          class="small"
-          style="
-            font-size:14px;
-            white-space:nowrap;
-            padding:4px 11px;
-            border-radius:999px;
-            font-weight:600;
-            background:${p.archived
-              ? 'rgba(220,38,38,0.15)'
-              : 'rgba(22,163,74,0.15)'};
-            color:${p.archived
-              ? '#dc2626'
-              : '#16a34a'};
-          "
-        >
-          ${p.archived ? 'Archived' : 'Active'}
-        </span>
-
-
-        <!-- Separator -->
-        <span style="color:var(--border-soft); font-weight:600;">│</span>
-
-        <!-- Archive/Delete Buttons -->
-        <div style="display:flex; gap:10px; white-space:nowrap;">
-
-        <!-- Archive/Restore -->
+      <!-- Archive/Delete Buttons -->
+      <div style="display:flex; gap:10px; white-space:nowrap;">
         <button onclick="toggleArchive(${i})"
                 style="font-size:13px; padding:5px 11px;">
           ${p.archived ? 'Restore' : 'Archive'}
         </button>
 
-        <!-- Delete -->
         <button onclick="deleteProject(${i})"
                 style="font-size:13px; padding:5px 11px;">
           Delete
         </button>
-      </div>
-
     </div>
+
+          <!-- Separator -->
+          <span style="color:var(--border-soft); font-weight:600;">│</span>
+
+          <!-- Collapse/Expand -->
+          <button class="btn-collapse" onclick="toggleCollapse(${i})">
+            ${p.collapsed ? '▼ Expand' : '▲ Collapse'}
+          </button>
+
+        </div><!-- /.project-actions -->
+
+  </div><!-- /.project-header-row -->
 
   
 
@@ -1210,7 +1139,7 @@ div.innerHTML = `
     ${p.description || 'Project objectives / description'}
   </strong>
 
-
+  <div class="collapsible-content">
   <!-- BusOps Disciplines -->
   <div class="row">
       <div class="section-header" id="busops-disciplines">BusOps Disciplines</div>
@@ -1576,13 +1505,22 @@ div.innerHTML = `
 
   </div>
 
-  <!-- Skipped SNOW Tasks -->
+<!-- Skipped SNOW Tasks -->
   <label class="chk-pill">
     <input
       type="checkbox"
       ${p.skippedAllTasks ? 'checked' : ''}
       onchange="updateField(${i}, 'skippedAllTasks', this.checked)">
     Skipped All SNOW Tasks
+  </label>
+
+  <!-- Searched Email For Latest Status -->
+  <label class="chk-pill">
+    <input
+      type="checkbox"
+      ${p.searchedEmailForLatestStatus ? 'checked' : ''}
+      onchange="updateField(${i}, 'searchedEmailForLatestStatus', this.checked)">
+    Searched Email For Latest Status
   </label>
 
   <!-- ORP Related -->
@@ -1797,7 +1735,7 @@ div.innerHTML = `
                   ondrop="memberDrop(${i}, ${m.originalIndex})"
                 >
                     ${m.name} (${m.email})
-                    <input type="checkbox" ${m.includeInEmail ? 'checked' : ''} onchange="toggleIncludeInEmail(${i}, ${m.originalIndex})"> Include in Email
+                    <input type="checkbox" ${m.includeInEmail ? 'checked' : ''} onchange="toggleIncludeInEmail(${i}, ${m.originalIndex})"> Include in Copy
                     <button onclick="copyEmail(${i}, ${m.originalIndex})" style="font-size:11px; padding:2px 6px;">Copy Email</button>
                     <button onclick="editMember(${i}, ${m.originalIndex})" style="font-size:11px; padding:2px 6px;">✏️</button>
                     <button onclick="deleteMember(${i}, ${m.originalIndex})" style="font-size:11px; padding:2px 6px;">🗑️</button>
@@ -1886,7 +1824,7 @@ ${(p.emailTemplates || []).map((t, idx) => `
                 onblur="updateField(${i},'notes',this.value)">${p.notes}</textarea>
     </div>
 
-
+    </div><!-- /.collapsible-content -->
 
     `;
 
@@ -1901,6 +1839,7 @@ function addProject() {
     name,
     name2: '',
     description:'',
+    collapsed: false,
     archived:false,
     raid: [],
     weeklyMeeting:false,
@@ -1909,6 +1848,7 @@ function addProject() {
     weeklyMeetingDuration: '',
     weeklyMeetingTimezone:'PST',
     skippedAllTasks:false,
+    searchedEmailForLatestStatus:false,
     orpRelated:false,
     state:'',
     wbs:[],
@@ -1957,11 +1897,13 @@ function normalizeProjects() {
     p.testAnalyst ??= '';
     // project fields
     p.name2 ??= '';
+    p.collapsed ??= false;
     p.busOpsDisciplines ??= [];
     p.raid ??= [];
     p.confirmedBusOpsDisciplines ??= false;
     p.busOpsDisciplineConfirmedDate ??= '';
     p.busOpsDisciplineConfirmedBy ??= '';
+    p.searchedEmailForLatestStatus ??= false;
     p.dcns ??= [];
     p.emailTemplates ??= [];
     p.projectPhase ??= '';
@@ -1975,14 +1917,88 @@ function save() {
   localStorage.setItem('projects', JSON.stringify(projects));
 }
 
-function saveFilter() {
-  const val = document.getElementById('projectFilter').value;
-  localStorage.setItem('projectFilter', val);
-}
+
+
+
 
 function deleteProject(i) {
-  projects.splice(i,1);
-  save(); render();
+  pendingDeleteIndex = i;
+  ensureConfirmDeleteModal();
+
+  const overlay = document.getElementById('confirmDeleteOverlay');
+  const nameEl = document.getElementById('confirmDeleteName');
+
+  if (nameEl) nameEl.textContent = projects[i].name || 'this project';
+  overlay.style.display = 'flex';
+}
+
+function confirmDeleteYes() {
+  if (pendingDeleteIndex !== null) {
+    projects.splice(pendingDeleteIndex, 1);
+
+    // If the focused project was deleted, clear focus and reset to Show All
+    if (focusedProjectIndex === pendingDeleteIndex) {
+      focusedProjectIndex = null;
+      localStorage.removeItem('focusedProjectIndex');
+
+      viewMode = 'all';
+      localStorage.setItem('viewMode', viewMode);
+      const viewModeSelect = document.getElementById('viewModeSelect');
+      if (viewModeSelect) viewModeSelect.value = 'all';
+
+      sortMode = 'alpha';
+      localStorage.setItem('sortMode', sortMode);
+      const sortModeSelect = document.getElementById('sortModeSelect');
+      if (sortModeSelect) sortModeSelect.value = 'alpha';
+    } else if (focusedProjectIndex !== null && focusedProjectIndex > pendingDeleteIndex) {
+      focusedProjectIndex--;
+      localStorage.setItem('focusedProjectIndex', focusedProjectIndex);
+    }
+
+    pendingDeleteIndex = null;
+    save();
+    render();
+  }
+  closeConfirmDeleteModal();
+}
+
+function closeConfirmDeleteModal() {
+  const overlay = document.getElementById('confirmDeleteOverlay');
+  if (overlay) overlay.style.display = 'none';
+  pendingDeleteIndex = null;
+}
+
+function ensureConfirmDeleteModal() {
+  let overlay = document.getElementById('confirmDeleteOverlay');
+  if (overlay) return;
+
+  overlay = document.createElement('div');
+  overlay.id = 'confirmDeleteOverlay';
+  overlay.className = 'confirm-overlay';
+  overlay.style.display = 'none';
+
+  overlay.innerHTML = `
+    <div class="confirm-card" role="dialog" aria-modal="true">
+      <h3>Delete Project</h3>
+      <p>Are you sure you want to delete <strong id="confirmDeleteName"></strong>?</p>
+      <div class="confirm-actions">
+        <button class="btn-danger" onclick="confirmDeleteYes()">Yes, Delete</button>
+        <button class="btn-secondary" onclick="closeConfirmDeleteModal()">Cancel</button>
+      </div>
+    </div>
+  `;
+
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) closeConfirmDeleteModal();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (overlay.style.display === 'flex' && e.key === 'Escape') {
+      closeConfirmDeleteModal();
+    }
+  });
+
+  document.body.appendChild(overlay);
 }
 
 function toggleArchive(i) {
@@ -2117,31 +2133,11 @@ function copyGroupEmails(projectIndex, group) {
 }
 
 
-function showCopyToast(message = 'Copied!') {
-  let toast = document.getElementById('copyToast');
-
-  if (!toast) {
-    toast = document.createElement('div');
-    toast.id = 'copyToast';
-    toast.className = 'copy-toast';
-    document.body.appendChild(toast);
-  }
-
-  toast.textContent = message;
-  toast.classList.add('show');
-
-  clearTimeout(toast._timeout);
-  toast._timeout = setTimeout(() => {
-    toast.classList.remove('show');
-  }, 1500);
-}
-
 function copyWBS(code) {
   navigator.clipboard.writeText(code)
     .then(() => showCopyToast('WBS code copied'))
     .catch(() => showCopyToast('Copy failed'));
 }
-
 
 function addWBS(projectIndex) {
   const type = document.getElementById(`wbsType-${projectIndex}`).value;
@@ -2688,20 +2684,6 @@ function saveDescriptionEdit(projectIndex, el) {
   save();
 }
 
-function updateArchiveToggleTooltip() {
-  const btn = document.getElementById('toggleArchivedBtn');
-  if (!btn) return;
-
-  if (showArchived) {
-    btn.dataset.tooltip = "Showing: Active + Archived projects";
-    // Optional: make the button label clearer
-    btn.textContent = "Hide Archived";
-  } else {
-    btn.dataset.tooltip = "Showing: Active projects only";
-    // Optional: make the button label clearer
-    btn.textContent = "Show Archived";
-  }
-}
 
 function showCopyToast(message = 'Copied!') {
   let toast = document.getElementById('copyToast');
@@ -2722,74 +2704,6 @@ function showCopyToast(message = 'Copied!') {
   }, 1500);
 }
 
-function showAllProjects() {
-  viewMode = 'all';
-  localStorage.setItem('viewMode', viewMode); 
-  updateViewButtonsAndTooltips();
-  render();
-}
-
-function toggleFilterMode() {
-  // Switch only between 'active' and 'archived'
-  viewMode = (viewMode === 'archived') ? 'active' : 'archived';
-
-  localStorage.setItem('viewMode', viewMode);
-  updateViewButtonsAndTooltips();
-  render();
-}
-
-
-function updateViewButtonsAndTooltips() {
-  const toggleBtn = document.getElementById('toggleFilterBtn');
-  const showAllBtn = document.getElementById('showAllBtn');
-  const showOrpBtn = document.getElementById('showOrpBtn');
-
-  if (!toggleBtn || !showAllBtn || !showOrpBtn) return;
-
-  // Toggle button ONLY switches between active-only and archived-only
-  if (viewMode === 'active') {
-    toggleBtn.textContent = 'Show Archived Only';
-    toggleBtn.dataset.tooltip = 'Showing: Active projects only';
-  } else if (viewMode === 'archived') {
-    toggleBtn.textContent = 'Show Active Only';
-    toggleBtn.dataset.tooltip = 'Showing: Archived projects only';
-  } else if (viewMode === 'all') {
-    toggleBtn.textContent = 'Show Archived Only';
-    toggleBtn.dataset.tooltip = 'Showing: All projects (Active + Archived)';
-  } else if (viewMode === 'orp') {
-    toggleBtn.textContent = 'Show Archived Only';
-    toggleBtn.dataset.tooltip = 'Showing: ORP-related projects only';
-  }
-
-  // Show All button
-  if (viewMode === 'all') {
-    showAllBtn.dataset.tooltip = 'Showing: All projects (Active + Archived)';
-  } else {
-    showAllBtn.dataset.tooltip = 'Click to show all projects (Active + Archived)';
-  }
-
-  // Show ORP button
-  if (viewMode === 'orp') {
-    showOrpBtn.dataset.tooltip = 'Showing: ORP-related projects only';
-  } else {
-    showOrpBtn.dataset.tooltip = 'Click to show ORP-related projects only';
-  }
-}
-
-function showOrpProjects() {
-  viewMode = 'orp';
-  localStorage.setItem('viewMode', viewMode);
-  updateViewButtonsAndTooltips();
-  render();
-}
-
-function formatDurationLabel(minutes) {
-  const m = parseInt(minutes, 10) || 0;
-  if (!m) return '';
-  if (m === 60) return '1 hour';
-  if (m % 60 === 0) return `${m / 60} hours`;
-  return `${m} mins`;
-}
 
 /* ================================
    ADD EXISTING MEMBER MODAL
@@ -4254,23 +4168,257 @@ function copyEmailTemplateCCEmails(projectIndex, templateIndex) {
 }
 
 function copyAllCheckedEmails(projectIndex) {
-  const emails = (projects[projectIndex].members || [])
-    .filter(m => m.includeInEmail && m.email && m.email.toLowerCase() !== 'no email')
-    .map(m => m.email)
-    .join('; ');
+  const p = projects[projectIndex];
+  const grouped = {};
 
-  if (!emails) {
+  // Build groups exactly like render() does
+  (p.members || []).forEach((m, idx) => {
+    const teams = (m.groups || []).length > 0 ? m.groups : ['No Group'];
+    teams.forEach(team => {
+      const key = normalizeGroupKey(team);
+      if (!grouped[key]) grouped[key] = [];
+      grouped[key].push({ ...m, originalIndex: idx });
+    });
+  });
+
+  const seen = new Set();
+  const emails = [];
+
+  // Walk groups in sorted order (same as page)
+  Object.keys(grouped).sort().forEach(team => {
+    grouped[team].forEach(m => {
+      if (
+        m.includeInEmail &&
+        m.email &&
+        m.email.toLowerCase() !== 'no email' &&
+        !seen.has(m.originalIndex)   // skip dupes from multi-group members
+      ) {
+        emails.push(m.email);
+        seen.add(m.originalIndex);
+      }
+    });
+  });
+
+  const result = emails.join('; ');
+
+  if (!result) {
     showCopyToast('No emails to copy');
     return;
   }
 
-  navigator.clipboard.writeText(emails)
+  navigator.clipboard.writeText(result)
     .then(() => showCopyToast('All checked emails copied'))
     .catch(() => showCopyToast('Copy failed'));
 }
 
+function changeViewMode(mode) {
+  viewMode = mode;
+  localStorage.setItem('viewMode', viewMode);
+  focusedProjectIndex = null;
+  localStorage.removeItem('focusedProjectIndex');
+
+  sortMode = 'alpha';
+  localStorage.setItem('sortMode', sortMode);
+  const sortModeSelect = document.getElementById('sortModeSelect');
+  if (sortModeSelect) sortModeSelect.value = sortMode;
+
+  render();
+}
+
+/* ================================
+   SEARCH PROJECTS MODAL
+================================ */
+
+function openSearchProjectsModal() {
+  ensureSearchProjectsModal();
+
+  const overlay = document.getElementById('searchProjectsModalOverlay');
+  overlay.style.display = 'flex';
+
+  const search = document.getElementById('searchProjectsInput');
+  if (search) { search.value = ''; search.focus(); }
+
+  renderSearchProjectsList('');
+}
+
+function closeSearchProjectsModal() {
+  const overlay = document.getElementById('searchProjectsModalOverlay');
+  if (overlay) overlay.style.display = 'none';
+}
+
+function renderSearchProjectsList(query) {
+  const rows = document.getElementById('searchProjectsRows');
+  if (!rows) return;
+
+  const q = (query || '').trim().toLowerCase();
+
+  // Build sorted list with original indices
+  const list = projects
+    .map((p, i) => ({ name: p.name, name2: p.name2 || '', archived: p.archived, index: i }))
+    .filter(p => !q || p.name.toLowerCase().includes(q) || p.name2.toLowerCase().includes(q))
+    .sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
+
+  if (list.length === 0) {
+    rows.innerHTML = `
+      <div class="search-project-row">
+        <div class="muted">No matching projects</div>
+        <div></div>
+      </div>`;
+    return;
+  }
+
+rows.innerHTML = list.map(p => {
+    const statusColor = p.archived ? '#dc2626' : '#16a34a';
+    const statusBg = p.archived ? 'rgba(220,38,38,0.12)' : 'rgba(22,163,74,0.12)';
+    const statusText = p.archived ? 'Archived' : 'Active';
+
+    return `
+      <div class="search-project-row" onclick="openProjectFromSearch(${p.index})" style="cursor:pointer;">
+        <div>
+          <span class="search-project-name">${escapeHtml(p.name)}</span>
+          ${p.name2 ? `<span class="muted" style="margin-left:6px; font-size:12px;">(${escapeHtml(p.name2)})</span>` : ''}
+          <span class="search-project-status" style="color:${statusColor}; background:${statusBg};">
+            ${statusText}
+          </span>
+        </div>
+        <button class="btn-shorter" onclick="event.stopPropagation(); openProjectFromSearch(${p.index})" style="font-size:12px; padding:5px 12px;">
+          Open
+        </button>
+      </div>`;
+  }).join('');
+}
+
+function openProjectFromSearch(projectIndex) {
+  viewMode = 'all';
+  localStorage.setItem('viewMode', viewMode);
+
+  // Clear Filter Projects dropdown to blank
+  const viewModeSelect = document.getElementById('viewModeSelect');
+  if (viewModeSelect) viewModeSelect.value = '';
+
+  // Clear Sort to None
+  sortMode = '';
+  localStorage.setItem('sortMode', '');
+  const sortModeSelect = document.getElementById('sortModeSelect');
+  if (sortModeSelect) sortModeSelect.value = '';
+
+  focusedProjectIndex = projectIndex;
+  localStorage.setItem('focusedProjectIndex', projectIndex);
+  closeSearchProjectsModal();
+  render();
+}
+
+function ensureSearchProjectsModal() {
+  let overlay = document.getElementById('searchProjectsModalOverlay');
+  if (overlay) return;
+
+  overlay = document.createElement('div');
+  overlay.id = 'searchProjectsModalOverlay';
+  overlay.className = 'modal-overlay';
+  overlay.style.display = 'none';
+
+  overlay.innerHTML = `
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="searchProjectsModalTitle">
+      <div class="modal-header">
+        <div>
+          <div id="searchProjectsModalTitle" class="modal-title">Search Projects</div>
+          <div class="modal-subtitle">Browse and open any project</div>
+        </div>
+
+        <div style="display:flex; gap:10px; align-items:center;">
+          <button class="btn-secondary" onclick="closeSearchProjectsModal()">Close</button>
+        </div>
+      </div>
+
+      <div class="modal-body">
+        <input
+          id="searchProjectsInput"
+          class="modal-search"
+          placeholder="Search by project name..."
+          oninput="renderSearchProjectsList(this.value)"
+        />
+
+        <div class="modal-list">
+          <div id="searchProjectsRows" class="modal-rows"></div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <div style="height:20px; display:flex;"></div>
+      </div>
+    </div>
+  `;
+
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) closeSearchProjectsModal();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (overlay.style.display === 'flex' && e.key === 'Escape') {
+      closeSearchProjectsModal();
+    }
+  });
+
+  document.body.appendChild(overlay);
+}
+
+function toggleCollapse(projectIndex) {
+  projects[projectIndex].collapsed = !projects[projectIndex].collapsed;
+  save();
+  render();
+}
+
+
+function changeSortMode(mode) {
+  sortMode = mode;
+  localStorage.setItem('sortMode', mode);
+  render();
+}
+
+// Strip formatting on paste for all contenteditable elements
+document.addEventListener('paste', function(e) {
+  const target = e.target;
+  if (target.isContentEditable) {
+    e.preventDefault();
+    const text = (e.clipboardData || window.clipboardData).getData('text/plain');
+    document.execCommand('insertText', false, text);
+  }
+});
+
+function changeCollapseMode(mode) {
+  // Get the indices currently visible in the view
+  const renderOrder = projects.map((_, i) => i);
+
+  renderOrder.forEach(i => {
+    const p = projects[i];
+
+    // Apply same filter logic as render()
+    if (viewMode === 'active' && p.archived) return;
+    if (viewMode === 'archived' && !p.archived) return;
+    if (viewMode === 'orp' && !p.orpRelated) return;
+    if (viewMode === 'general' && p.name !== 'General Project') return;
+    if (focusedProjectIndex !== null && i !== focusedProjectIndex) return;
+
+    p.collapsed = (mode === 'collapse');
+  });
+
+  // Reset dropdown to blank after action
+  const collapseModeSelect = document.getElementById('collapseModeSelect');
+  if (collapseModeSelect) collapseModeSelect.value = '';
+
+  save();
+  render();
+}
+
+
 normalizeProjects();
-updateViewButtonsAndTooltips();
+
+const viewModeSelect = document.getElementById('viewModeSelect');
+if (viewModeSelect) viewModeSelect.value = viewMode;
+
+const sortModeSelect = document.getElementById('sortModeSelect');
+if (sortModeSelect) sortModeSelect.value = sortMode;
+
 render();
 </script>
 </body>
