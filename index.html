@@ -5,9 +5,7 @@
 <title>Project Tracker</title>
 <link rel="icon" type="image/x-icon" href="favicon-pm.png">
 <style>
-/* ================================
-   COLOR SYSTEM
-================================ */
+
 :root {
   --bg-app: #f3f6fb;
   --bg-card: #ffffff;
@@ -30,9 +28,7 @@
     0 8px 20px rgba(0,0,0,0.07);
 }
 
-/* ================================
-   BASE / RESET
-================================ */
+
 * {
   box-sizing: border-box;
 }
@@ -44,6 +40,7 @@ body {
     radial-gradient(1200px 600px at top right, #dde7ff 0%, transparent 60%),
     var(--bg-app);
   color: var(--text-main);
+  min-width: 435px;
 }
 
 h1 {
@@ -75,9 +72,6 @@ button:active {
   transform: translateY(1px);
 }
 
-/* ================================
-   COPY TOAST (bottom-right)
-================================ */
 .copy-toast {
   position: fixed;
   right: 38px;
@@ -108,10 +102,33 @@ button:active {
   transform: translateY(0);
 }
 
+.project-name-toast {
+  position: fixed;
+  right: 38px;
+  top: 18px;
+  z-index: 99999;
 
-/* ================================
-   INPUTS
-================================ */
+  background: rgba(17, 24, 39, 0.92);
+  color: #fff;
+
+  padding: 8px 14px;
+  border-radius: 12px;
+
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+
+  box-shadow: 0 12px 30px rgba(0,0,0,0.25);
+
+  opacity: 0;
+  pointer-events: none;
+}
+
+.project-name-toast.show {
+  opacity: 1;
+}
+
+
 input,
 textarea,
 select {
@@ -140,9 +157,7 @@ textarea {
   resize: vertical;
 }
 
-/* ================================
-   HEADER
-================================ */
+
 .header-row {
   display: flex;
   justify-content: space-between;
@@ -179,23 +194,10 @@ textarea {
 }
 
 
-/* Optional: emphasize the number only (wrap number in a span in JS/HTML) */
 .active-count .count-number {
   font-weight: 800;
   color: var(--primary);
 }
-
-/* Optional hover (nice subtle microinteraction) */
-/*
-.active-count:hover {
-  transform: translateY(-1px);
-  box-shadow:
-    0 3px 14px rgba(17,24,39,0.10),
-    0 0 0 2px rgba(79,70,229,0.14);
-  cursor: default;
-}
-*/
-
 
 .section-header {
   margin-top: 16px;
@@ -211,9 +213,7 @@ textarea {
   border-bottom: 1px solid var(--border-soft);
 }
 
-/* ================================
-   CONTROLS
-================================ */
+
 .controls {
   display: flex;
   flex-direction: column;
@@ -229,9 +229,7 @@ textarea {
   border-radius: 9px;
 }
 
-/* ================================
-   PROJECT CARD
-================================ */
+
 .project {
   border: 1px solid var(--border-soft);
   /* transition: transform 0.12s ease, box-shadow 0.12s ease; */
@@ -260,9 +258,6 @@ textarea {
 
 
 
-/* ================================
-   PROJECT TITLE
-================================ */
 .project strong {
   font-size: 21px;
   font-weight: 600;
@@ -289,6 +284,8 @@ textarea {
   min-width: 220px;          /* ✅ adjust to taste (160–320px) */
   padding: 2px 6px;          /* gives a nicer hit area */
   border-radius: 8px;
+  position: relative;
+  bottom: 3.5px;
 }
 
 /* Optional: make it obvious it's editable on hover */
@@ -304,13 +301,11 @@ textarea {
   white-space: normal;
   word-break: break-word;
   overflow-wrap: anywhere;
-  min-width: 0;                /* ← lets flexbox shrink it */
+  min-width: 200px;                /* ← lets flexbox shrink it */
   flex: 1 1 0;                 /* ← grow to fill, shrink freely */
 }
 
-/* ================================
-   SMALL TEXT
-================================ */
+
 .small {
   font-size: 12px;
 }
@@ -381,58 +376,53 @@ textarea {
   opacity: 0.6;
 }
 
-/* Targets ONLY the group header strong (Training/Ops/No Group) */
-/* .project .section-header + .row + ul.small > li > strong { */
+
 .project .group-header-name {
   color: var(--primary);
   font-size: 13px;
   font-weight: 700;
 }
 
-/* Project Notes: full width */
+
 .project .project-notes {
   width: 100%;
   display: block;
-  flex: 1;              /* helps if the parent row becomes flex */
-  min-height: 110px;    /* optional: makes notes feel roomier */
+  flex: 1;              
+  min-height: 110px;    
+  max-height: none;
+  resize: vertical;
+  overflow: auto;
 }
 
-/* Grid container */
 
-/* Status areas: left-stacked flex layout that wraps */
 .status-grid {
   display: flex;
   flex-wrap: wrap;
-  justify-content: flex-start; /* ⬅️ keep everything stacked left */
+  justify-content: flex-start; 
   align-items: flex-start;
-  gap: 12px 14px;              /* row gap / column gap */
+  gap: 12px 14px;              
 }
 
 
-/* Each field block (label wraps text + select) */
+
 .status-grid > label {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;   /* ⬅️ left align */
-  text-align: left;          /* ⬅️ left align label text */
+  align-items: flex-start;   
+  text-align: left;          
   gap: 6px;
   margin-top: 10px;
 
-  /* Helps create consistent “columns” while still wrapping */
-  min-width: 180px;          /* tweak: 160–220 */
+
+  min-width: 180px;         
 }
 
-/* Fixed dropdown width so they don't expand to fill space */
+
 .status-grid select {
-  width: 170px;     /* tweak: 150–190 */
+  width: 170px;    
   max-width: none;
 }
 
-
-/* Bulleted Classes */
-
-
-/* Comment in and out here */
 
 .bulleted-list {
   padding-left: 30px;
@@ -444,17 +434,15 @@ textarea {
 }
 
 
-/* Hyperlink row */
-/* keep bullets + allow inner flex layout */
 .project .hyperlink-item {
   list-style: disc;
 }
 
-/* flex ONLY the contents inside the li */
+
 .project .hyperlink-content, .project .task-content, .project .busops-content, .project .dcn-content, .project .raid-content {
   display: flex;
   align-items: center;
-  gap: 6px; /* ✅ spacing between link + buttons */
+  gap: 6px;
 }
 
 .project .task-content > button {
@@ -462,15 +450,11 @@ textarea {
   top: 1px;
 }
 
-
 .project .small-copy{
   padding: 2px 20px;
 }
 
 
-/* ================================
-   ARCHIVING PROJECTS
-================================ */
 
 .project.archive {
   background: linear-gradient(135deg, #eaecf0 0%, #dcdfe5 100%);
@@ -488,11 +472,7 @@ textarea {
     0 4px 12px rgba(0,0,0,0.08);
 }
 
-/* ================================
-   TASKS
-================================ */
 
-/* this is the font size of the tasks which are larger than normal*/
 .task-content > span{
   font-size: 15px;
 }
@@ -501,9 +481,7 @@ textarea {
   font-size: 12px;
 }
 
-/* ================================
-   ADD EXISTING MEMBER MODAL
-================================ */
+
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -681,9 +659,6 @@ textarea {
   font-size: 16px;
 }
 
-/* ================================
-   DCN Section
-================================ */
 
 .dcn-item {
   cursor: grab;
@@ -693,12 +668,10 @@ textarea {
   opacity: 0.85;
 }
 
-/* Optional: make the DCN number stand out slightly */
+
 .dcn-number {
   font-weight: 700;
 }
-
-/* RAID Log */
 
 .raid-item {
   cursor: grab;
@@ -715,10 +688,6 @@ textarea {
 }
 
 
-
-/* ================================
-   EMAIL TEMPLATES
-================================ */
 .emailtpl-item { cursor: grab; }
 .emailtpl-item:active { cursor: grabbing; opacity: 0.85; }
 
@@ -740,6 +709,33 @@ textarea {
 .rich-editor:focus {
   border-color: var(--primary);
   box-shadow: 0 0 0 3px rgba(79,70,229,0.15);
+}
+
+.rich-editor p,
+.rich-editor div,
+.rich-editor h1,
+.rich-editor h2,
+.rich-editor h3,
+.rich-editor h4,
+.rich-editor h5,
+.rich-editor h6 {
+  margin: 0;
+  padding: 0;
+}
+
+.rich-editor ul,
+.rich-editor ol {
+  margin: 2px 0;
+  padding-left: 24px;
+}
+
+.rich-editor li {
+  margin: 0;
+  padding: 0;
+}
+
+.rich-editor {
+  line-height: 1.35;
 }
 
 .editor-toolbar {
@@ -764,7 +760,7 @@ textarea {
   box-shadow: none;
 }
 
-/* Email Template "To" list inside the modal */
+
 .emailtpl-to-item {
   display: flex;
   align-items: center;
@@ -787,7 +783,6 @@ textarea {
 .emailtpl-to-item .to-email { color: var(--text-muted); font-size: 12px; }
 
 
-/* Email Template "CC" list (same styling as To) */
 .emailtpl-cc-item {
   display: flex;
   align-items: center;
@@ -867,9 +862,6 @@ textarea {
   white-space: nowrap;
 }
 
-/* ================================
-   CONFIRM DELETE MODAL
-================================ */
 .confirm-overlay {
   position: fixed;
   inset: 0;
@@ -895,6 +887,19 @@ textarea {
   text-align: center;
 }
 
+
+.rich-editor[data-placeholder]:empty::before {
+  content: attr(data-placeholder);
+  color: var(--text-muted);
+  pointer-events: none;
+  font-style: italic;
+}
+
+.modal-project-fullname {
+  position: relative;
+  bottom: 1px;
+}
+
 </style>
 </head>
 <body>
@@ -918,17 +923,18 @@ textarea {
       <option value="archived">Show Archived</option>
       <option value="orp">Show ORP Related</option>
       <option value="general">Show General Template</option>
+      <option value="uncheckedMeeting">Unchecked Weekly Meeting</option>
     </select>
     </label>
 
     <label style="display:flex; align-items:center; gap:6px; font-size:13px; font-weight:600;">
-          Sort
-            <select id="sortModeSelect" onchange="changeSortMode(this.value)">
-              <option value="">None</option>
-              <option value="alpha">Sort Alphabetically</option>
-              <option value="default">Sort Default</option>
-            </select>
-    </label>
+        Sort
+          <select id="sortModeSelect" onchange="changeSortMode(this.value)">
+            <option value="" disabled hidden></option>
+            <option value="alpha">Sort Alphabetically</option>
+            <option value="default">Sort Default</option>
+          </select>
+  </label>
 
     <label style="display:flex; align-items:center; gap:6px; font-size:13px; font-weight:600;">
       Collapse
@@ -939,8 +945,22 @@ textarea {
       </select>
     </label>
 
+    <label style="display:flex; align-items:center; gap:6px; font-size:13px; font-weight:600;">
+      Days
+      <select id="dayFilterSelect" onchange="changeDayFilter(this.value)">
+        <option value="" disabled hidden></option>
+        <option value="Monday">Monday</option>
+        <option value="Tuesday">Tuesday</option>
+        <option value="Wednesday">Wednesday</option>
+        <option value="Thursday">Thursday</option>
+        <option value="Friday">Friday</option>
+      </select>
+    </label>
+
     <button onclick="exportData()">Export Data</button>
     <button onclick="openImportModal()">Import Data</button>
+    <!-- Refactor later -->
+    <button onclick="exportORPReport()">ORP Report Data</button>
   </div>
 </div>
 
@@ -955,10 +975,11 @@ textarea {
 <script>
 let projects = JSON.parse(localStorage.getItem('projects') || '[]');
 // viewMode: 'active' | 'archived' | 'all' | 'orp'
-const validModes = ['active', 'archived', 'all', 'orp'];
-let viewMode = validModes.includes(localStorage.getItem('viewMode'))
+
+let viewMode = ['active', 'archived', 'all', 'orp'].includes(localStorage.getItem('viewMode'))
   ? localStorage.getItem('viewMode')
-  : 'active';
+  : 'active'
+
 
 let dragMemberProject = null;
 let dragMemberIndex = null;
@@ -994,6 +1015,11 @@ let focusedProjectIndex = localStorage.getItem('focusedProjectIndex') !== null
 
 let pendingDeleteIndex = null;
 
+let dayFilter = localStorage.getItem('dayFilter') || '';
+
+let projectNameToastObserver = null;
+let hoveredProjectDiv = null;
+
 function render() {
 
 
@@ -1019,32 +1045,48 @@ function render() {
 
   const container = document.getElementById('projectList');
 
-  // Build sorted index order
-    let renderOrder = projects.map((_, i) => i);
+// Build sorted index order
+let renderOrder = projects.map((_, i) => i);
 
-    if (sortMode === 'alpha') {
-      renderOrder.sort((a, b) =>
-        (projects[a].name || '').localeCompare(projects[b].name || '', undefined, { sensitivity: 'base' })
-      );
-    }
+if (dayFilter) {
+  // Day-filter sort: General Project first, then by meeting time
+  renderOrder.sort((a, b) => {
+    const pa = projects[a];
+    const pb = projects[b];
+    if (pa.name === 'General Project' && pb.name !== 'General Project') return -1;
+    if (pb.name === 'General Project' && pa.name !== 'General Project') return 1;
+    return (pa.weeklyMeetingTime || '').localeCompare(pb.weeklyMeetingTime || '');
+  });
+} else if (sortMode === 'alpha') {
+  renderOrder.sort((a, b) =>
+    (projects[a].name || '').localeCompare(projects[b].name || '', undefined, { sensitivity: 'base' })
+  );
+}
 
-  container.innerHTML = '';
+container.innerHTML = '';
 
-  renderOrder.forEach(i => {
-    const p = projects[i];
-    // Filter based on viewMode
+renderOrder.forEach(i => {
+  const p = projects[i];
+
+  if (dayFilter) {
+    if (p.archived && p.name !== 'General Project') return;
+    if (p.name !== 'General Project' && !(p.weeklyMeeting && p.weeklyMeetingDay === dayFilter)) return;
+  } else {
+    // Normal viewMode filtering
     if (viewMode === 'active' && p.archived) return;
     if (viewMode === 'archived' && !p.archived) return;
     if (viewMode === 'orp' && !p.orpRelated) return;
     if (viewMode === 'general' && p.name !== 'General Project') return;
-    // viewMode === 'all' shows everything
+    if (viewMode === 'uncheckedMeeting' && (p.archived || p.weeklyMeeting)) return;
+  }
 
-    // Single-project focus (from Search Projects modal)
-    if (focusedProjectIndex !== null && i !== focusedProjectIndex) return;
+  // Single-project focus (from Search Projects modal)
+  if (focusedProjectIndex !== null && i !== focusedProjectIndex) return;
 
 
     const div = document.createElement('div');
     div.className = 'project' + (p.archived ? ' archive' : '') + (p.collapsed ? ' collapsed' : '');
+    div.dataset.projectIndex = i;
 
 
 
@@ -1375,6 +1417,12 @@ div.innerHTML = `
         ${memberOptions(p, p.testAnalyst)}
       </select>
     </label>
+
+    <label>BusOps Test Analyst
+      <select onchange="updateField(${i}, 'busOpsTestAnalyst', this.value)">
+        ${memberOptions(p, p.busOpsTestAnalyst)}
+      </select>
+    </label>
   </div>
 
   <!-- RAID Log -->
@@ -1440,9 +1488,10 @@ div.innerHTML = `
     `).join('')}
   </ul>
 
+  
   <!-- Checkboxes -->
   <div class="section-header">Checkboxes</div>
-  <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+  <div style="display:flex; align-items:center; gap:10px 14px; flex-wrap:wrap;">
 
   <label class="chk-pill" style="display:flex; align-items:center; gap:6px;">
     <input
@@ -1456,11 +1505,8 @@ div.innerHTML = `
     Weekly Meeting
   </label>
 
-<div class="row" style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
-
   <!-- Weekly Meeting + Day + Time -->
   <div style="display:flex; align-items:center; gap:8px;">
-
 
     <select
       ${!p.weeklyMeeting ? 'disabled' : ''}
@@ -1501,11 +1547,9 @@ div.innerHTML = `
       `).join('')}
     </select>
 
-    
-
   </div>
 
-<!-- Skipped SNOW Tasks -->
+  <!-- Skipped SNOW Tasks -->
   <label class="chk-pill">
     <input
       type="checkbox"
@@ -1533,11 +1577,8 @@ div.innerHTML = `
   </label>
 
 </div>
-</div>
-</div>
 
       <!-- WBS Codes -->
-      <div class="row"></div>
       <div class="section-header">WBS Codes</div>
       <div class="row">
         <select id="wbsType-${i}">
@@ -1579,6 +1620,7 @@ div.innerHTML = `
         <select id="linkType-${i}">
           <option value="">Select</option>
           <option>Gainwell SharePoint</option>
+          <option>Load SNOW</option>
           <option>DHCS SNOW Link</option>
         </select>
         <input placeholder="Hyperlink URL" id="linkUrl-${i}">
@@ -1816,25 +1858,75 @@ ${(p.emailTemplates || []).map((t, idx) => `
 
     </ul>
 
-      <!-- Project Notes -->
+    <!-- Project Notes -->
     <div class="section-header">Project Notes</div>
-    <div class="row">
-      <textarea class="project-notes"
-                placeholder="Project notes"
-                onblur="updateField(${i},'notes',this.value)">${p.notes}</textarea>
+
+    <div class="editor-toolbar">
+      <button class="btn-secondary" type="button" onclick="notesCmd(${i},'bold')"><b>B</b></button>
+      <button class="btn-secondary" type="button" onclick="notesCmd(${i},'italic')"><i>I</i></button>
+      <button class="btn-secondary" type="button" onclick="notesCmd(${i},'underline')"><u>U</u></button>
+      <button class="btn-secondary" type="button" onclick="notesCmd(${i},'strikeThrough')"><s>S</s></button>
+      <button class="btn-secondary" type="button" onclick="notesCmd(${i},'insertUnorderedList')">• List</button>
+      <button class="btn-secondary" type="button" onclick="notesCmd(${i},'insertOrderedList')">1. List</button>
+      <button class="btn-secondary" type="button" onclick="notesCmd(${i},'formatBlock','H3')">H3</button>
+      <button class="btn-secondary" type="button" onclick="notesCmd(${i},'removeFormat')">Clear</button>
+      <span class="small" style="color:var(--text-muted); margin-left:auto;">
+        Paste from Outlook / Word to keep formatting
+      </span>
     </div>
+
+    <div
+    id="projectNotes-${i}"
+    class="rich-editor project-notes"
+    contenteditable="true"
+    spellcheck="true"
+    data-placeholder="Project notes"
+    oninput="saveProjectNotes(${i}, this)"
+    onblur="saveProjectNotes(${i}, this)"
+    >${notesToHtml(p.notes)}</div>
 
     </div><!-- /.collapsible-content -->
 
     `;
 
     container.appendChild(div);
+
+    setupProjectNameToast();
+
+    // Remember notes height across refreshes
+    const notesEl = div.querySelector(`#projectNotes-${i}`);
+    if (notesEl) {
+      if (p.notesHeight) notesEl.style.height = p.notesHeight + 'px';
+
+      requestAnimationFrame(() => {
+        let lastHeight = notesEl.offsetHeight;
+        new ResizeObserver(() => {
+          const h = notesEl.offsetHeight;
+          if (h && h !== lastHeight) {
+            lastHeight = h;
+            projects[i].notesHeight = h;
+            save();
+          }
+        }).observe(notesEl);
+      });
+    }
+
+  
   });
 }
 
 function addProject() {
   const name = document.getElementById('newProjectName').value.trim();
   if (!name) return;
+
+  const duplicate = projects.some(p =>
+    p.name.trim().toLowerCase() === name.toLowerCase()
+  );
+  if (duplicate) {
+    showCopyToast('A project with that name already exists');
+    return;
+  }
+
   projects.push({
     name,
     name2: '',
@@ -1852,6 +1944,7 @@ function addProject() {
     orpRelated:false,
     state:'',
     wbs:[],
+    dates: [],
     hyperlinks:[],
     members:[],
     tasks:[],
@@ -1867,13 +1960,39 @@ function addProject() {
     cammiManager: '',
     businessAnalyst: '',
     testAnalyst: '',
+    busOpsTestAnalyst: '',
     busOpsDisciplines: [],
     confirmedBusOpsDisciplines: false,
     busOpsDisciplineConfirmedDate: '',
     busOpsDisciplineConfirmedBy: '',
     dcns: [],
-    projectPhase: ''
+    projectPhase: '',
+    notesHeight: 0
   });
+
+  // Focus on the newly added project
+  focusedProjectIndex = projects.length - 1;
+  localStorage.setItem('focusedProjectIndex', focusedProjectIndex);
+
+  // Clear day filter
+  dayFilter = '';
+  localStorage.setItem('dayFilter', '');
+  const dayFilterSelect = document.getElementById('dayFilterSelect');
+  if (dayFilterSelect) dayFilterSelect.value = '';
+
+  // Set viewMode to all so the new project isn't filtered out
+  viewMode = 'all';
+  localStorage.setItem('viewMode', viewMode);
+  const viewModeSelect = document.getElementById('viewModeSelect');
+  if (viewModeSelect) viewModeSelect.value = '';
+
+  // Clear sort
+  sortMode = '';
+  localStorage.setItem('sortMode', '');
+  const sortModeSelect = document.getElementById('sortModeSelect');
+  if (sortModeSelect) sortModeSelect.value = '';
+
+
   document.getElementById('newProjectName').value = '';
   save();
   render();
@@ -1895,10 +2014,12 @@ function normalizeProjects() {
     p.cammiManager ??= '';
     p.businessAnalyst ??= '';
     p.testAnalyst ??= '';
+    p.busOpsTestAnalyst ??= '';
     // project fields
     p.name2 ??= '';
     p.collapsed ??= false;
     p.busOpsDisciplines ??= [];
+    p.dates ??= [];
     p.raid ??= [];
     p.confirmedBusOpsDisciplines ??= false;
     p.busOpsDisciplineConfirmedDate ??= '';
@@ -1907,6 +2028,7 @@ function normalizeProjects() {
     p.dcns ??= [];
     p.emailTemplates ??= [];
     p.projectPhase ??= '';
+    p.notesHeight ??= 0;
     (p.emailTemplates || []).forEach(t => { t.toEmails ??= []; t.ccEmails ??= []; });
   });
 
@@ -1936,7 +2058,6 @@ function confirmDeleteYes() {
   if (pendingDeleteIndex !== null) {
     projects.splice(pendingDeleteIndex, 1);
 
-    // If the focused project was deleted, clear focus and reset to Show All
     if (focusedProjectIndex === pendingDeleteIndex) {
       focusedProjectIndex = null;
       localStorage.removeItem('focusedProjectIndex');
@@ -1950,6 +2071,11 @@ function confirmDeleteYes() {
       localStorage.setItem('sortMode', sortMode);
       const sortModeSelect = document.getElementById('sortModeSelect');
       if (sortModeSelect) sortModeSelect.value = 'alpha';
+
+      dayFilter = '';
+      localStorage.setItem('dayFilter', '');
+      const dayFilterSelect = document.getElementById('dayFilterSelect');
+      if (dayFilterSelect) dayFilterSelect.value = '';
     } else if (focusedProjectIndex !== null && focusedProjectIndex > pendingDeleteIndex) {
       focusedProjectIndex--;
       localStorage.setItem('focusedProjectIndex', focusedProjectIndex);
@@ -2188,8 +2314,8 @@ function editHyperlink(projectIndex, linkIndex) {
   let type = prompt("Edit Link Type (Gainwell SharePoint, DHCS SNOW Link, or Blank)", link.type);
   if (type === null) return;
   type = type.trim();
-  if (!['Gainwell SharePoint', 'DHCS SNOW Link', 'Blank'].includes(type)) {
-    alert('Invalid type. Must be Gainwell SharePoint, DHCS SNOW Link, or Blank.');
+  if (!['Gainwell SharePoint', 'Load SNOW', 'DHCS SNOW Link', 'Blank'].includes(type)) {
+    alert('Invalid type. Must be Gainwell SharePoint, Load SNOW, DHCS SNOW Link, or Blank.');
     return;
   }
   const url = prompt("Edit URL", link.url);
@@ -2502,14 +2628,33 @@ function linkDrop(projectIndex, targetIndex) {
 }
 
 function memberOptions(p, selected) {
-  return `
-    <option value="">Unassigned</option>
-    ${(p.members || []).map(m => `
-      <option value="${m.name}" ${m.name === selected ? 'selected' : ''}>
-        ${m.name}
-      </option>
-    `).join('')}
-  `;
+  const grouped = {};
+  const displayName = {};
+
+  (p.members || []).forEach((m, idx) => {
+    const teams = (m.groups || []).length > 0 ? m.groups : ['No Group'];
+    teams.forEach(team => {
+      const key = normalizeGroupKey(team);
+      if (!grouped[key]) {
+        grouped[key] = [];
+        displayName[key] = normalizeGroupName(team);
+      }
+      grouped[key].push({ ...m, originalIndex: idx });
+    });
+  });
+
+  const seen = new Set();
+  let options = '<option value="">Unassigned</option>';
+
+  Object.keys(grouped).sort().forEach(team => {
+    grouped[team].forEach(m => {
+      if (seen.has(m.originalIndex)) return;
+      seen.add(m.originalIndex);
+      options += `<option value="${m.name}" ${m.name === selected ? 'selected' : ''}>${m.name}</option>`;
+    });
+  });
+
+  return options;
 }
 
 
@@ -2918,7 +3063,7 @@ function getUniqueExistingMembers(excludeProjectIndex) {
   });
 
   // 2) Gather members from all projects and de-dupe by name+email+group (case-insensitive)
-  (projects || []).forEach((p, pIdx) => {
+  (projects || []).forEach((p) => {
     (p.members || []).forEach(m => {
       const rawName = (m?.name || '').trim() || 'No Name';
       const rawEmail = (m?.email || '').trim() || 'No Email';
@@ -3249,10 +3394,6 @@ function ensureExistingMemberModal() {
   document.body.appendChild(overlay);
 }
 
-/* ================================
-   EMAIL TEMPLATES (rich body + modal)
-================================ */
-
 
 function emailTemplateDragStart(projectIndex, idx) {
   dragEmailTemplateProject = projectIndex;
@@ -3409,22 +3550,6 @@ function htmlToPlainText(html) {
   div.innerHTML = String(html || '');
   return (div.textContent || div.innerText || '').trim();
 }
-
-// async function copyRichHtml(html) {
-//   const plain = htmlToPlainText(html);
-
-//   function listener(e) {
-//     e.clipboardData.setData("text/html", html);
-//     e.clipboardData.setData("text/plain", plain);
-//     e.preventDefault();
-//   }
-
-//   document.addEventListener("copy", listener);
-//   document.execCommand("copy");
-//   document.removeEventListener("copy", listener);
-
-//   return true;
-// }
 
 async function copyRichHtml(html) {
   const plain = htmlToPlainText(html);
@@ -3586,9 +3711,6 @@ function ensureEmailTemplateModal() {
   document.body.appendChild(overlay);
 }
 
-/* ================================
-   EMAIL TEMPLATE — "To" LIST
-================================ */
 
 function renderEmailTplToList() {
   const container = document.getElementById('emailTplToListContainer');
@@ -3644,10 +3766,6 @@ function emailToDrop(targetIndex) {
   renderEmailTplToList();
 }
 
-
-/* ================================
-   EMAIL TO — PICKER MODAL
-================================ */
 
 function getAllUniqueMembersForEmail() {
   const map = new Map();
@@ -3869,10 +3987,6 @@ function ensureEmailToPickerModal() {
 }
 
 
-/* ================================
-   COPY EMAILS (main page button)
-================================ */
-
 function copyEmailTemplateEmails(projectIndex, templateIndex) {
   const t = (projects[projectIndex].emailTemplates || [])[templateIndex];
   const emails = (t?.toEmails || []).map(r => r.email).filter(Boolean).join('; ');
@@ -3887,9 +4001,6 @@ function copyEmailTemplateEmails(projectIndex, templateIndex) {
     .catch(() => showCopyToast('Copy failed'));
 }
 
-/* ================================
-   EMAIL TEMPLATE — "CC" LIST
-================================ */
 
 function renderEmailTplCcList() {
   const container = document.getElementById('emailTplCcListContainer');
@@ -3945,10 +4056,6 @@ function emailCcDrop(targetIndex) {
   renderEmailTplCcList();
 }
 
-
-/* ================================
-   EMAIL CC — PICKER MODAL
-================================ */
 
 function openEmailCcPickerModal() {
   ensureEmailCcPickerModal();
@@ -4148,11 +4255,6 @@ function ensureEmailCcPickerModal() {
   document.body.appendChild(overlay);
 }
 
-
-/* ================================
-   COPY CC EMAILS (main page button)
-================================ */
-
 function copyEmailTemplateCCEmails(projectIndex, templateIndex) {
   const t = (projects[projectIndex].emailTemplates || [])[templateIndex];
   const emails = (t?.ccEmails || []).map(r => r.email).filter(Boolean).join('; ');
@@ -4217,17 +4319,23 @@ function changeViewMode(mode) {
   focusedProjectIndex = null;
   localStorage.removeItem('focusedProjectIndex');
 
+  // Clear day filter
+  dayFilter = '';
+  localStorage.setItem('dayFilter', '');
+  const dayFilterSelect = document.getElementById('dayFilterSelect');
+  if (dayFilterSelect) dayFilterSelect.value = '';
+
   sortMode = 'alpha';
   localStorage.setItem('sortMode', sortMode);
   const sortModeSelect = document.getElementById('sortModeSelect');
   if (sortModeSelect) sortModeSelect.value = sortMode;
 
+  // Reset collapse dropdown to blank
+  const collapseModeSelect = document.getElementById('collapseModeSelect');
+  if (collapseModeSelect) collapseModeSelect.value = '';
+
   render();
 }
-
-/* ================================
-   SEARCH PROJECTS MODAL
-================================ */
 
 function openSearchProjectsModal() {
   ensureSearchProjectsModal();
@@ -4275,8 +4383,8 @@ rows.innerHTML = list.map(p => {
     return `
       <div class="search-project-row" onclick="openProjectFromSearch(${p.index})" style="cursor:pointer;">
         <div>
-          <span class="search-project-name">${escapeHtml(p.name)}</span>
-          ${p.name2 ? `<span class="muted" style="margin-left:6px; font-size:12px;">(${escapeHtml(p.name2)})</span>` : ''}
+          <span class="search-project-name" style="margin-right:5px">${escapeHtml(p.name)}</span>
+          ${p.name2 ? `<span class="muted modal-project-fullname" style="margin-left:6px; font-size:12px;">${escapeHtml(p.name2)}</span>` : ''}
           <span class="search-project-status" style="color:${statusColor}; background:${statusBg};">
             ${statusText}
           </span>
@@ -4292,15 +4400,19 @@ function openProjectFromSearch(projectIndex) {
   viewMode = 'all';
   localStorage.setItem('viewMode', viewMode);
 
-  // Clear Filter Projects dropdown to blank
   const viewModeSelect = document.getElementById('viewModeSelect');
   if (viewModeSelect) viewModeSelect.value = '';
 
-  // Clear Sort to None
   sortMode = '';
   localStorage.setItem('sortMode', '');
   const sortModeSelect = document.getElementById('sortModeSelect');
   if (sortModeSelect) sortModeSelect.value = '';
+
+  // Clear day filter
+  dayFilter = '';
+  localStorage.setItem('dayFilter', '');
+  const dayFilterSelect = document.getElementById('dayFilterSelect');
+  if (dayFilterSelect) dayFilterSelect.value = '';
 
   focusedProjectIndex = projectIndex;
   localStorage.setItem('focusedProjectIndex', projectIndex);
@@ -4375,10 +4487,10 @@ function changeSortMode(mode) {
   render();
 }
 
-// Strip formatting on paste for all contenteditable elements
+// Strip formatting on paste — except for rich editors (notes + email body)
 document.addEventListener('paste', function(e) {
   const target = e.target;
-  if (target.isContentEditable) {
+  if (target.isContentEditable && !target.classList.contains('rich-editor')) {
     e.preventDefault();
     const text = (e.clipboardData || window.clipboardData).getData('text/plain');
     document.execCommand('insertText', false, text);
@@ -4386,38 +4498,254 @@ document.addEventListener('paste', function(e) {
 });
 
 function changeCollapseMode(mode) {
-  // Get the indices currently visible in the view
   const renderOrder = projects.map((_, i) => i);
 
   renderOrder.forEach(i => {
-    const p = projects[i];
+  const p = projects[i];
 
-    // Apply same filter logic as render()
+  if (dayFilter) {
+      if (p.archived && p.name !== 'General Project') return;
+      if (p.name !== 'General Project' && !(p.weeklyMeeting && p.weeklyMeetingDay === dayFilter)) return;
+  } else {
     if (viewMode === 'active' && p.archived) return;
     if (viewMode === 'archived' && !p.archived) return;
     if (viewMode === 'orp' && !p.orpRelated) return;
     if (viewMode === 'general' && p.name !== 'General Project') return;
-    if (focusedProjectIndex !== null && i !== focusedProjectIndex) return;
+    if (viewMode === 'uncheckedMeeting' && (p.archived || p.weeklyMeeting)) return;
+  }
+  if (focusedProjectIndex !== null && i !== focusedProjectIndex) return;
 
-    p.collapsed = (mode === 'collapse');
+  p.collapsed = (mode === 'collapse');
   });
 
-  // Reset dropdown to blank after action
-  const collapseModeSelect = document.getElementById('collapseModeSelect');
-  if (collapseModeSelect) collapseModeSelect.value = '';
 
   save();
   render();
 }
 
 
+/** Convert legacy plain-text notes → HTML (runs once per render) */
+function notesToHtml(notes) {
+  if (!notes) return '';
+  // Already contains HTML tags → return as-is
+  if (/<[a-z][\s\S]*>/i.test(notes)) return notes;
+  // Plain text: escape & convert newlines to <br>
+  return escapeHtml(notes).replace(/\n/g, '<br>');
+}
+
+/** Toolbar command scoped to a specific project's notes editor */
+function notesCmd(projectIndex, cmd, value = null) {
+  const el = document.getElementById(`projectNotes-${projectIndex}`);
+  if (el) el.focus();
+  document.execCommand(cmd, false, value);
+}
+
+/** Save on blur — sanitize then persist */
+function saveProjectNotes(projectIndex, el) {
+  projects[projectIndex].notes = sanitizeHtml(el.innerHTML);
+  save();
+}
+
+// Refactor later
+function exportORPReport() {
+  const orpProjects = projects.filter(p => p.orpRelated);
+
+  if (orpProjects.length === 0) {
+    showCopyToast('No ORP-related projects found');
+    return;
+  }
+
+  const reportData = orpProjects.map(p => ({
+    "Name 1": p.name || '',
+    "Name 2": p.name2 || '',
+    "Status": p.archived ? 'Archived' : 'Active',
+    "Project Description": p.description || '',
+    "Associated DCNs": (p.dcns || []).map(d => d.number),
+    "Project Phase": p.projectPhase || '',
+    "Project State": p.state || '',
+    "Task Stage": p.taskStage || '',
+    "BusOps PM": p.busOpsPM || '',
+    "Tasks": (p.tasks || []).map(t => t.text),
+    "Dates": (p.dates || []).map(d => ({
+      type: d.type,
+      date: formatDateMDY(d.value)
+    })),
+    "Project Notes": htmlToPlainText(p.notes || '')
+  }));
+
+  const output = {
+    reportTitle: "ORP Related Projects Report",
+    exportDate: new Date().toISOString(),
+    projectCount: reportData.length,
+    projects: reportData
+  };
+
+  const blob = new Blob([JSON.stringify(output, null, 2)], {
+    type: 'application/json'
+  });
+
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+
+  const date = new Date().toISOString().replace(/[:.]/g, '-');
+  a.href = url;
+  a.download = `orp-report-${date}.json`;
+
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
+  showCopyToast(`ORP report exported (${reportData.length} projects)`);
+}
+
+function changeDayFilter(day) {
+  dayFilter = day;
+  localStorage.setItem('dayFilter', day);
+
+  focusedProjectIndex = null;
+  localStorage.removeItem('focusedProjectIndex');
+
+  // Clear viewMode dropdown (day filter takes over)
+  const viewModeSelect = document.getElementById('viewModeSelect');
+  if (viewModeSelect) viewModeSelect.value = '';
+
+  // Clear sort (day filter has its own sort: time-based)
+  sortMode = '';
+  localStorage.setItem('sortMode', '');
+  const sortModeSelect = document.getElementById('sortModeSelect');
+  if (sortModeSelect) sortModeSelect.value = '';
+
+  // Reset collapse dropdown to blank
+  const collapseModeSelect = document.getElementById('collapseModeSelect');
+  if (collapseModeSelect) collapseModeSelect.value = '';
+
+  render();
+}
+
+function ensureProjectNameToast() {
+  let toast = document.getElementById('projectNameToast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'projectNameToast';
+    toast.className = 'project-name-toast';
+    document.body.appendChild(toast);
+  }
+  return toast;
+}
+
+function updateProjectNameToast() {
+  const toast = ensureProjectNameToast();
+
+  if (hoveredProjectDiv) {
+    const header = hoveredProjectDiv.querySelector('.project-header-row');
+    if (header) {
+      const headerRect = header.getBoundingClientRect();
+      if (headerRect.bottom < 0) {
+        const idx = parseInt(hoveredProjectDiv.dataset.projectIndex, 10);
+        const p = projects[idx];
+        if (p) {
+          toast.textContent = p.name;
+          toast.classList.add('show');
+          return;
+        }
+      }
+    }
+  }
+
+  toast.classList.remove('show');
+}
+
+function setupProjectNameToast() {
+  if (projectNameToastObserver) {
+    projectNameToastObserver.disconnect();
+    projectNameToastObserver = null;
+  }
+
+  hoveredProjectDiv = null;
+
+  window.removeEventListener('scroll', updateProjectNameToast);
+  window.addEventListener('scroll', updateProjectNameToast);
+
+  document.querySelectorAll('.project').forEach(div => {
+    div.addEventListener('mouseenter', () => {
+      hoveredProjectDiv = div;
+      updateProjectNameToast();
+    });
+
+  div.addEventListener('mouseleave', () => {
+    // Toast persists — only changes when entering another project card
+  });
+  });
+
+  updateProjectNameToast();
+}
+
+// function ensureProjectNameToast() {
+//   let toast = document.getElementById('projectNameToast');
+//   if (!toast) {
+//     toast = document.createElement('div');
+//     toast.id = 'projectNameToast';
+//     toast.className = 'project-name-toast';
+//     document.body.appendChild(toast);
+//   }
+//   return toast;
+// }
+
+// function updateProjectNameToast() {
+//   const toast = ensureProjectNameToast();
+//   let activeProject = null;
+
+//   document.querySelectorAll('.project').forEach(div => {
+//     const header = div.querySelector('.project-header-row');
+//     if (!header) return;
+//     const cardRect = div.getBoundingClientRect();
+//     const headerRect = header.getBoundingClientRect();
+
+//     if (cardRect.bottom > 0 && headerRect.bottom < 0) {
+//       activeProject = div;
+//     }
+//   });
+
+//   if (activeProject) {
+//     const idx = parseInt(activeProject.dataset.projectIndex, 10);
+//     const p = projects[idx];
+//     if (p) {
+//       toast.textContent = p.name;
+//       toast.classList.add('show');
+//       return;
+//     }
+//   }
+
+//   toast.classList.remove('show');
+// }
+
+// function setupProjectNameToast() {
+//   if (projectNameToastObserver) {
+//     projectNameToastObserver.disconnect();
+//     projectNameToastObserver = null;
+//   }
+
+//   window.removeEventListener('scroll', updateProjectNameToast);
+//   window.addEventListener('scroll', updateProjectNameToast);
+//   updateProjectNameToast();
+// }
+
+
 normalizeProjects();
 
 const viewModeSelect = document.getElementById('viewModeSelect');
-if (viewModeSelect) viewModeSelect.value = viewMode;
+if (viewModeSelect) viewModeSelect.value = dayFilter ? '' : viewMode;
 
 const sortModeSelect = document.getElementById('sortModeSelect');
-if (sortModeSelect) sortModeSelect.value = sortMode;
+if (sortModeSelect) sortModeSelect.value = dayFilter ? '' : sortMode;
+
+const dayFilterSelect = document.getElementById('dayFilterSelect');
+if (dayFilterSelect) dayFilterSelect.value = dayFilter;
+
+const collapseModeSelect = document.getElementById('collapseModeSelect');
+if (collapseModeSelect) collapseModeSelect.value = '';
+
 
 render();
 </script>
