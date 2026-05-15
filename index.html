@@ -189,7 +189,7 @@ textarea {
     0 6px 16px rgba(17, 24, 39, 0.08);
 
   position: relative;
-  top: 6px;
+  top: 7px;
   right: 6px;
 }
 
@@ -900,6 +900,14 @@ textarea {
   bottom: 1px;
 }
 
+.btn-add{
+  background: linear-gradient(135deg, #067a97, #0b5f74);
+  box-shadow: 0 4px 14px rgba(6, 122, 151, 0.35);
+}
+.btn-add:hover{
+  box-shadow: 0 6px 20px rgba(6, 122, 151, 0.45);
+}
+
 </style>
 </head>
 <body>
@@ -911,7 +919,12 @@ textarea {
 <div class="controls">
   <div class="controls-row">
     <input id="newProjectName" class="top-input" placeholder="New project name" onkeydown="if(event.key==='Enter'){ event.preventDefault(); addProject(); }" />
-    <button onclick="addProject()">Add Project</button>
+    <button onclick="addProject()" class="btn-add">+ Add Project</button>
+    
+    <span style="display:flex; align-items:center; color: var(--separator-hard); font-weight:600;">
+      │
+    </span>
+
     <button onclick="openSearchProjectsModal()">Search Projects</button>
 
     <label style="display:flex; align-items:center; gap:6px; font-size:13px; font-weight:600;">
@@ -925,6 +938,18 @@ textarea {
       <option value="general">Show General Template</option>
       <option value="uncheckedMeeting">Unchecked Weekly Meeting</option>
     </select>
+    </label>
+
+    <label style="display:flex; align-items:center; gap:6px; font-size:13px; font-weight:600;">
+      Days
+      <select id="dayFilterSelect" onchange="changeDayFilter(this.value)">
+        <option value="" disabled hidden></option>
+        <option value="Monday">Monday</option>
+        <option value="Tuesday">Tuesday</option>
+        <option value="Wednesday">Wednesday</option>
+        <option value="Thursday">Thursday</option>
+        <option value="Friday">Friday</option>
+      </select>
     </label>
 
     <label style="display:flex; align-items:center; gap:6px; font-size:13px; font-weight:600;">
@@ -945,20 +970,9 @@ textarea {
       </select>
     </label>
 
-    <label style="display:flex; align-items:center; gap:6px; font-size:13px; font-weight:600;">
-      Days
-      <select id="dayFilterSelect" onchange="changeDayFilter(this.value)">
-        <option value="" disabled hidden></option>
-        <option value="Monday">Monday</option>
-        <option value="Tuesday">Tuesday</option>
-        <option value="Wednesday">Wednesday</option>
-        <option value="Thursday">Thursday</option>
-        <option value="Friday">Friday</option>
-      </select>
-    </label>
-
     <button onclick="exportData()">Export Data</button>
     <button onclick="openImportModal()">Import Data</button>
+    <button onclick="checkStorage()" class="btn-secondary">Check Storage</button>
     <!-- Refactor later -->
     <button onclick="exportORPReport()">ORP Report Data</button>
   </div>
@@ -4476,10 +4490,14 @@ function ensureSearchProjectsModal() {
 
 function toggleCollapse(projectIndex) {
   projects[projectIndex].collapsed = !projects[projectIndex].collapsed;
+
+  // ✅ Clear the Collapse dropdown selection whenever a card-level collapse/expand is used
+  const collapseModeSelect = document.getElementById('collapseModeSelect');
+  if (collapseModeSelect) collapseModeSelect.value = '';
+
   save();
   render();
 }
-
 
 function changeSortMode(mode) {
   sortMode = mode;
@@ -4730,6 +4748,53 @@ function setupProjectNameToast() {
 //   window.addEventListener('scroll', updateProjectNameToast);
 //   updateProjectNameToast();
 // }
+
+function formatBytes(bytes) {
+  if (!Number.isFinite(bytes) || bytes < 0) return '0 B';
+  const units = ['B', 'KB', 'MB', 'GB'];
+  let i = 0;
+  let num = bytes;
+  while (num >= 1024 && i < units.length - 1) {
+    num /= 1024;
+    i++;
+  }
+  return `${num.toFixed(i === 0 ? 0 : 2)} ${units[i]}`;
+}
+
+function getLocalStorageUsageBytes() {
+  let total = 0;
+
+  // Count key + value bytes (UTF-16 strings are ~2 bytes/char)
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i) || '';
+    const val = localStorage.getItem(key) || '';
+    total += (key.length + val.length) * 2;
+  }
+
+  return total;
+}
+
+function checkStorage() {
+  // Typical limit is ~5MB per origin in most browsers.
+  // You can adjust this if you want a different baseline.
+  const assumedQuotaBytes = 5 * 1024 * 1024;
+
+  const usedBytes = getLocalStorageUsageBytes();
+  const remainingBytes = Math.max(assumedQuotaBytes - usedBytes, 0);
+  const percentUsed = Math.min((usedBytes / assumedQuotaBytes) * 100, 100);
+
+  const msg =
+`Local Storage Usage (estimated)
+
+Used:      ${formatBytes(usedBytes)}
+Limit:     ${formatBytes(assumedQuotaBytes)} (assumed)
+Percent:   ${percentUsed.toFixed(1)}%
+Remaining: ${formatBytes(remainingBytes)}
+
+Note: Browsers don’t expose the exact localStorage quota reliably, so the “Limit” is an estimate.`;
+
+  alert(msg);
+}
 
 
 normalizeProjects();
