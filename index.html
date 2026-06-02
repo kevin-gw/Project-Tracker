@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <title>Project Tracker</title>
-<link rel="icon" type="image/x-icon" href="favicon-pm.png">
+<link rel="icon" type="image/x-icon" href="favicon-pm3.png">
 <style>
 
 :root {
@@ -909,7 +909,7 @@ textarea {
 }
 
 </style>
-</head>
+
 <body>
 <div class="header-row">
   <h1>Project Management Tracker</h1>
@@ -990,9 +990,9 @@ textarea {
 let projects = JSON.parse(localStorage.getItem('projects') || '[]');
 // viewMode: 'active' | 'archived' | 'all' | 'orp'
 
-let viewMode = ['active', 'archived', 'all', 'orp'].includes(localStorage.getItem('viewMode'))
-  ? localStorage.getItem('viewMode')
-  : 'active'
+let viewMode = ['active', 'archived', 'all', 'orp', 'general', 'uncheckedMeeting'].includes(localStorage.getItem('viewMode'))
+? localStorage.getItem('viewMode')
+: 'active';
 
 
 let dragMemberProject = null;
@@ -4327,29 +4327,33 @@ function copyAllCheckedEmails(projectIndex) {
     .catch(() => showCopyToast('Copy failed'));
 }
 
-function changeViewMode(mode) {
-  viewMode = mode;
-  localStorage.setItem('viewMode', viewMode);
-  focusedProjectIndex = null;
-  localStorage.removeItem('focusedProjectIndex');
+function changeViewMode(value) {
+  viewMode = value;
+  localStorage.setItem('viewMode', value || '');
 
-  // Clear day filter
-  dayFilter = '';
-  localStorage.setItem('dayFilter', '');
   const dayFilterSelect = document.getElementById('dayFilterSelect');
-  if (dayFilterSelect) dayFilterSelect.value = '';
 
-  sortMode = 'alpha';
-  localStorage.setItem('sortMode', sortMode);
-  const sortModeSelect = document.getElementById('sortModeSelect');
-  if (sortModeSelect) sortModeSelect.value = sortMode;
+  if (value) {
+    if (dayFilterSelect) dayFilterSelect.value = '';
+    dayFilter = '';
+    localStorage.setItem('dayFilter', '');
 
-  // Reset collapse dropdown to blank
-  const collapseModeSelect = document.getElementById('collapseModeSelect');
-  if (collapseModeSelect) collapseModeSelect.value = '';
+    enforceCollapseAll();
+    return;
+  }
 
   render();
 }
+
+function enforceCollapseAll() {
+  const collapseSelect = document.getElementById("collapseModeSelect");
+  if (collapseSelect) {
+    collapseSelect.value = "collapse";
+  }
+
+  changeCollapseMode("collapse");
+}
+
 
 function openSearchProjectsModal() {
   ensureSearchProjectsModal();
@@ -4617,29 +4621,23 @@ function exportORPReport() {
   showCopyToast(`ORP report exported (${reportData.length} projects)`);
 }
 
-function changeDayFilter(day) {
-  dayFilter = day;
-  localStorage.setItem('dayFilter', day);
+function changeDayFilter(value) {
+  dayFilter = value;
+  localStorage.setItem('dayFilter', value || '');
 
-  focusedProjectIndex = null;
-  localStorage.removeItem('focusedProjectIndex');
-
-  // Clear viewMode dropdown (day filter takes over)
   const viewModeSelect = document.getElementById('viewModeSelect');
-  if (viewModeSelect) viewModeSelect.value = '';
 
-  // Clear sort (day filter has its own sort: time-based)
-  sortMode = '';
-  localStorage.setItem('sortMode', '');
-  const sortModeSelect = document.getElementById('sortModeSelect');
-  if (sortModeSelect) sortModeSelect.value = '';
+  if (value) {
+    if (viewModeSelect) viewModeSelect.value = '';
+    enforceCollapseAll();
+    return;
+  }
 
-  // Reset collapse dropdown to blank
-  const collapseModeSelect = document.getElementById('collapseModeSelect');
-  if (collapseModeSelect) collapseModeSelect.value = '';
-
+  if (viewModeSelect) viewModeSelect.value = viewMode || '';
   render();
 }
+
+
 
 function ensureProjectNameToast() {
   let toast = document.getElementById('projectNameToast');
