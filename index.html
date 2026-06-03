@@ -280,12 +280,41 @@ textarea {
 
 /* Project Name 2: keep a clickable area even when empty */
 .project .project-name-secondary {
-  display: inline-block;     /* ✅ required so min-width works */
-  min-width: 220px;          /* ✅ adjust to taste (160–320px) */
-  padding: 2px 6px;          /* gives a nicer hit area */
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
   border-radius: 8px;
+
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+
+  min-width: 220px;
+  min-height: 30px;         /* ✅ gives it real clickable height when blank */
+  line-height: 1.2;
+  flex: 1 1 0;
+  vertical-align: middle;
   position: relative;
-  bottom: 3.5px;
+  bottom: 2px;
+}
+
+/* Hover cue */
+.project .project-name-secondary:hover {
+  background: rgba(79, 70, 229, 0.06);
+  cursor: text;
+}
+
+/* Placeholder when blank */
+.project .project-name-secondary:empty::before {
+  content: attr(data-placeholder);
+  color: var(--text-muted);
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+/* Hide placeholder while actively editing */
+.project .project-name-secondary.editing:empty::before {
+  content: '';
 }
 
 /* Optional: make it obvious it's editable on hover */
@@ -908,6 +937,65 @@ textarea {
   box-shadow: 0 6px 20px rgba(6, 122, 151, 0.45);
 }
 
+/* ===== Drag drop indicator ===== */
+.drag-indicator-top,
+.drag-indicator-bottom {
+  position: relative;
+}
+
+.drag-indicator-top::before,
+.drag-indicator-bottom::after {
+  content: "";
+  position: absolute;
+  left: -2px;
+  right: -2px;
+  height: 0;
+  border-top: 3px solid #2563eb; /* blue line */
+  border-radius: 999px;
+  pointer-events: none;
+  z-index: 5;
+  box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.10);
+}
+
+.drag-indicator-top::before {
+  top: -6px;
+}
+
+.drag-indicator-bottom::after {
+  bottom: -6px;
+}
+
+/* Description editable behavior like Name 2 */
+.project-description-editable {
+  display: block;
+
+  min-height: 28px;
+  padding: 4px 0;   /* ✅ no left/right indent */
+
+  border-radius: 8px;
+
+  line-height: 1.3;
+  white-space: normal;
+}
+
+/* Hover cue */
+.project-description-editable:hover {
+  background: rgba(79, 70, 229, 0.06);
+  cursor: text;
+}
+
+/* Placeholder when empty */
+.project-description-editable:empty::before {
+  content: attr(data-placeholder);
+  color: var(--text-muted);
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+/* Hide placeholder while editing */
+.project-description-editable.editing:empty::before {
+  content: '';
+}
 </style>
 
 <body>
@@ -941,6 +1029,15 @@ textarea {
     </label>
 
     <label style="display:flex; align-items:center; gap:6px; font-size:13px; font-weight:600;">
+          Sort
+            <select id="sortModeSelect" onchange="changeSortMode(this.value)">
+              <option value="" disabled hidden></option>
+              <option value="alpha">Sort Alphabetically</option>
+              <option value="default">Sort Default</option>
+            </select>
+    </label>
+
+    <label style="display:flex; align-items:center; gap:6px; font-size:13px; font-weight:600;">
       Days
       <select id="dayFilterSelect" onchange="changeDayFilter(this.value)">
         <option value="" disabled hidden></option>
@@ -952,14 +1049,7 @@ textarea {
       </select>
     </label>
 
-    <label style="display:flex; align-items:center; gap:6px; font-size:13px; font-weight:600;">
-        Sort
-          <select id="sortModeSelect" onchange="changeSortMode(this.value)">
-            <option value="" disabled hidden></option>
-            <option value="alpha">Sort Alphabetically</option>
-            <option value="default">Sort Default</option>
-          </select>
-  </label>
+
 
     <label style="display:flex; align-items:center; gap:6px; font-size:13px; font-weight:600;">
       Collapse
@@ -975,6 +1065,14 @@ textarea {
     <button onclick="checkStorage()" class="btn-secondary">Check Storage</button>
     <!-- Refactor later -->
     <button onclick="exportORPReport()">ORP Report Data</button>
+    <label class="chk-pill" style="display:flex; align-items:center; gap:6px; font-size:13px; font-weight:600;">
+      <input
+        type="checkbox"
+        id="wbsViewCheckbox"
+        onchange="toggleWBSView(this.checked)"
+      >
+      <span>WBS View</span>
+    </label>
   </div>
 </div>
 
@@ -988,7 +1086,6 @@ textarea {
 />
 <script>
 let projects = JSON.parse(localStorage.getItem('projects') || '[]');
-// viewMode: 'active' | 'archived' | 'all' | 'orp'
 
 let viewMode = ['active', 'archived', 'all', 'orp', 'general', 'uncheckedMeeting'].includes(localStorage.getItem('viewMode'))
 ? localStorage.getItem('viewMode')
@@ -1031,8 +1128,22 @@ let pendingDeleteIndex = null;
 
 let dayFilter = localStorage.getItem('dayFilter') || '';
 
-let projectNameToastObserver = null;
+
 let hoveredProjectDiv = null;
+
+let meetingMinutesModalProjectIndex = null;
+let meetingMinutesModalEditIndex = null;
+
+let dragMeetingMinutesProject = null;
+let dragMeetingMinutesIndex = null;
+
+let chatMessagesModalProjectIndex = null;
+let chatMessagesModalEditIndex = null;
+
+let dragChatMessagesProject = null;
+let dragChatMessagesIndex = null;
+
+let wbsView = localStorage.getItem('wbsView') === 'true';
 
 function render() {
 
@@ -1050,6 +1161,9 @@ function render() {
     if (!Array.isArray(p.dcns)) p.dcns = [];
     if (!Array.isArray(p.raid)) p.raid = [];
     if (!Array.isArray(p.emailTemplates)) p.emailTemplates = [];
+    if (!Array.isArray(p.meetingMinutes)) p.meetingMinutes = [];
+    if (!Array.isArray(p.chatMessages)) p.chatMessages = [];
+
     
     p.members.forEach(m => {
       if (!Array.isArray(m.groups)) m.groups = [];
@@ -1094,14 +1208,13 @@ renderOrder.forEach(i => {
     if (viewMode === 'uncheckedMeeting' && (p.archived || p.weeklyMeeting)) return;
   }
 
-  // Single-project focus (from Search Projects modal)
-  if (focusedProjectIndex !== null && i !== focusedProjectIndex) return;
+  // Single-project focus only applies when no day filter is active
+  if (!dayFilter && focusedProjectIndex !== null && i !== focusedProjectIndex) return;
 
 
     const div = document.createElement('div');
     div.className = 'project' + (p.archived ? ' archive' : '') + (p.collapsed ? ' collapsed' : '');
     div.dataset.projectIndex = i;
-
 
 
 div.innerHTML = `
@@ -1123,14 +1236,14 @@ div.innerHTML = `
 
     <!-- Project Name 2 -->
     <strong
-      contenteditable="false"
-      class="project-name project-name-secondary"
-      ondblclick="enableName2Edit(this)"
-      onkeydown="handleName2Key(event, ${i}, this)"
-      onblur="saveName2Edit(${i}, this)"
-    >
-      ${p.name2 || ''}
-    </strong>
+  contenteditable="false"
+  class="project-name project-name-secondary"
+
+  ondblclick="enableName2Edit(this)"
+  onkeydown="handleName2Key(event, ${i}, this)"
+  onblur="saveName2Edit(${i}, this)"
+>${p.name2 || ''}</strong>
+
 
 <!-- ✅ Actions: no inline flex override needed anymore -->
     <div class="project-actions">
@@ -1185,20 +1298,21 @@ div.innerHTML = `
   
 
   <!-- Project Description -->
-  <strong
-    contenteditable="false"
-    class="project-description"
-    ondblclick="enableDescriptionEdit(this)"
-    onkeydown="handleDescriptionKey(event, ${i}, this)"
-    onblur="saveDescriptionEdit(${i}, this)"
-  >
-    ${p.description || 'Project objectives / description'}
-  </strong>
+<strong
+contenteditable="false"
+class="project-description project-description-editable"
+data-placeholder="Project objectives / description"
+ondblclick="enableDescriptionEdit(this)"
+onkeydown="handleDescriptionKey(event, ${i}, this)"
+onblur="saveDescriptionEdit(${i}, this)"
+>${p.description ? escapeHtml(p.description) : ''}</strong>
+
 
   <div class="collapsible-content">
   <!-- BusOps Disciplines -->
-  <div class="row">
-      <div class="section-header" id="busops-disciplines">BusOps Disciplines</div>
+<div class="section-header" id="busops-disciplines">BusOps Disciplines</div>
+
+<div class="busops-wrapper">
   <div class="row">
 
   <div class="busops-row">
@@ -1257,13 +1371,13 @@ div.innerHTML = `
   <!-- Bulleted Disciplines -->
   <ul class="small small-bulleted-disciplines bulleted-list">
     ${(p.busOpsDisciplines || []).map((d, idx) => `
-      <li
-        draggable="true"
-        ondragstart="disciplineDragStart(${i}, ${idx})"
-        ondragend="disciplineDragEnd()"
-        ondragover="event.preventDefault()"
-        ondrop="disciplineDrop(${i}, ${idx})"
-      >
+    <li
+      draggable="true"
+      ondragstart="disciplineDragStart(${i}, ${idx})"
+      ondragend="disciplineDragEnd()"
+      ondragover="handleDragIndicator(event, this)"
+      ondrop="disciplineDrop(${i}, ${idx})"
+    >
       <span class="busops-content">
         ${d.type}
 
@@ -1280,6 +1394,8 @@ div.innerHTML = `
       </li>
     `).join('')}
   </ul>
+</div>  <!-- closes .row -->
+</div>  <!-- closes .busops-wrapper -->
 
   <!-- Associated DCNs -->
     <div class="section-header">Associated DCNs</div>
@@ -1304,7 +1420,7 @@ div.innerHTML = `
           draggable="true"
           ondragstart="dcnDragStart(${i}, ${idx})"
           ondragend="dcnDragEnd()"
-          ondragover="event.preventDefault()"
+          ondragover="handleDragIndicator(event, this)"
           ondrop="dcnDrop(${i}, ${idx})"
         >
           <span class="dcn-content">
@@ -1464,7 +1580,7 @@ div.innerHTML = `
   </button>
 </div>
 
-  <!-- RAID Log -->
+
   <ul class="small bulleted-list">
     ${(p.raid || []).map((r, idx) => `
       <li
@@ -1472,7 +1588,7 @@ div.innerHTML = `
         draggable="true"
         ondragstart="raidDragStart(${i}, ${idx})"
         ondragend="raidDragEnd()"
-        ondragover="event.preventDefault()"
+        ondragover="handleDragIndicator(event, this)"
         ondrop="raidDrop(${i}, ${idx})"
       >
         <span class="raid-content">
@@ -1611,7 +1727,7 @@ div.innerHTML = `
             class="wbs-item"
             ondragstart="wbsDragStart(${i}, ${idx})"
             ondragend="wbsDragEnd()"
-            ondragover="event.preventDefault()"
+            ondragover="handleDragIndicator(event, this)"
             ondrop="wbsDrop(${i}, ${idx})"
           >
             ${w.type}: ${w.code}
@@ -1649,7 +1765,7 @@ div.innerHTML = `
               class=""
               ondragstart="linkDragStart(${i}, ${idx})"
               ondragend="linkDragEnd()"
-              ondragover="event.preventDefault()"
+              ondragover="handleDragIndicator(event, this)"
               ondrop="linkDrop(${i}, ${idx})"
             >
               <span class="hyperlink-content">
@@ -1685,7 +1801,7 @@ div.innerHTML = `
               draggable="true"
               ondragstart="taskDragStart(${i}, ${idx})"
               ondragend="taskDragEnd()"
-              ondragover="event.preventDefault()"
+              ondragover="handleDragIndicator(event, this)"
               ondrop="taskDrop(${i}, ${idx})">
 
             <span class="task-content">
@@ -1723,7 +1839,7 @@ div.innerHTML = `
               draggable="true"
               ondragstart="dateDragStart(${i}, ${idx})"
               ondragend="dateDragEnd()"
-              ondragover="event.preventDefault()"
+              ondragover="handleDragIndicator(event, this)"
               ondrop="dateDrop(${i}, ${idx})">
 
             <span class="date-type">${d.type}</span>: ${formatDateMDY(d.value)}
@@ -1787,7 +1903,7 @@ div.innerHTML = `
                   draggable="true"
                   ondragstart="memberDragStart(${i}, ${m.originalIndex})"
                   ondragend="memberDragEnd()"
-                  ondragover="event.preventDefault()"
+                  ondragover="handleDragIndicator(event, this)"
                   ondrop="memberDrop(${i}, ${m.originalIndex})"
                 >
                     ${m.name} (${m.email})
@@ -1801,6 +1917,103 @@ div.innerHTML = `
             </li>
           `).join('');
         })()}
+    </ul>
+
+    <!-- Meeting Minutes -->
+    <div class="section-header">Meeting Minutes</div>
+
+    <div class="row">
+      <button class="btn-shorter add-email-template" onclick="openMeetingMinutesModal(${i})">
+        Add Meeting Minutes
+      </button>
+    </div>
+
+    <ul class="small bulleted-list">
+      ${(p.meetingMinutes || []).map((m, idx) => `
+        <li
+          class="emailtpl-item"
+          draggable="true"
+          ondragstart="meetingMinutesDragStart(${i}, ${idx})"
+          ondragend="meetingMinutesDragEnd()"
+          ondragover="handleDragIndicator(event, this)"
+          ondrop="meetingMinutesDrop(${i}, ${idx})"
+        >
+          <span class="emailtpl-content">
+            <span>
+              <span class="emailtpl-name">${escapeHtml(m.type || 'Meeting')}</span>
+              <span class="small" style="margin-left:6px; color:var(--text-muted);">
+                ${m.date ? formatDateMDY(m.date) : 'No date'}
+              </span>
+              ${m.attendees ? `
+                <span class="small" style="margin-left:8px; color:var(--text-muted);">
+                  — ${escapeHtml(m.attendees.length > 70 ? m.attendees.slice(0, 70) + '…' : m.attendees)}
+                </span>
+              ` : ''}
+            </span>
+
+            <button
+              onclick="event.stopPropagation(); openMeetingMinutesModal(${i}, ${idx})"
+              onmousedown="event.stopPropagation()"
+              draggable="false"
+              style="font-size:11px; padding:2px 6px;"
+            >✏️</button>
+
+            <button
+              onclick="event.stopPropagation(); deleteMeetingMinutes(${i}, ${idx})"
+              onmousedown="event.stopPropagation()"
+              draggable="false"
+              style="font-size:11px; padding:2px 6px;"
+            >🗑️</button>
+          </span>
+        </li>
+      `).join('')}
+    </ul>
+
+    <!-- Chat Messages -->
+    <div class="section-header">Chat Messages</div>
+
+    <div class="row">
+      <button class="btn-shorter add-email-template" onclick="openChatMessagesModal(${i})">
+        Add Chat Message
+      </button>
+    </div>
+
+    <ul class="small bulleted-list">
+      ${(p.chatMessages || []).map((c, idx) => `
+        <li
+          class="emailtpl-item"
+          draggable="true"
+          ondragstart="chatMessagesDragStart(${i}, ${idx})"
+          ondragend="chatMessagesDragEnd()"
+          ondragover="handleDragIndicator(event, this)"
+          ondrop="chatMessagesDrop(${i}, ${idx})"
+        >
+          <span class="emailtpl-content">
+            <span>
+              <span class="emailtpl-name">${escapeHtml(c.person || 'Unknown')}</span>
+              ${c.topic ? `
+                <span class="small" style="margin-left:8px; color:var(--text-muted);">
+                  — ${escapeHtml(c.topic.length > 80 ? c.topic.slice(0, 80) + '…' : c.topic)}
+                </span>
+              ` : ''}
+            </span>
+
+            <button
+              onclick="event.stopPropagation(); openChatMessagesModal(${i}, ${idx})"
+              onmousedown="event.stopPropagation()"
+              draggable="false"
+              style="font-size:11px; padding:2px 6px;"
+            >✏️</button>
+
+            <button
+              onclick="event.stopPropagation(); deleteChatMessage(${i}, ${idx})"
+              onmousedown="event.stopPropagation()"
+              draggable="false"
+              style="font-size:11px; padding:2px 6px;"
+            >🗑️</button>
+          </span>
+        </li>
+      `).join('')}
     </ul>
 
     <!-- Email Templates -->
@@ -1819,7 +2032,7 @@ ${(p.emailTemplates || []).map((t, idx) => `
     draggable="true"
     ondragstart="emailTemplateDragStart(${i}, ${idx})"
     ondragend="emailTemplateDragEnd()"
-    ondragover="event.preventDefault()"
+    ondragover="handleDragIndicator(event, this)"
     ondrop="emailTemplateDrop(${i}, ${idx})"
   >
     <span class="emailtpl-content">
@@ -1927,6 +2140,7 @@ ${(p.emailTemplates || []).map((t, idx) => `
 
   
   });
+  applyWBSView();
 }
 
 function addProject() {
@@ -1962,8 +2176,10 @@ function addProject() {
     hyperlinks:[],
     members:[],
     tasks:[],
+    meetingMinutes: [],
     emailTemplates: [],
     notes:'',
+    chatMessages: [],
     primaryVendor: '',
     taskStage: '',
     itmoPM: '',
@@ -2040,8 +2256,10 @@ function normalizeProjects() {
     p.busOpsDisciplineConfirmedBy ??= '';
     p.searchedEmailForLatestStatus ??= false;
     p.dcns ??= [];
+    p.meetingMinutes ??= [];
     p.emailTemplates ??= [];
     p.projectPhase ??= '';
+    p.chatMessages ??= [];
     p.notesHeight ??= 0;
     (p.emailTemplates || []).forEach(t => { t.toEmails ??= []; t.ccEmails ??= []; });
   });
@@ -2052,10 +2270,6 @@ function normalizeProjects() {
 function save() {
   localStorage.setItem('projects', JSON.stringify(projects));
 }
-
-
-
-
 
 function deleteProject(i) {
   pendingDeleteIndex = i;
@@ -2464,15 +2678,66 @@ function taskDragEnd() {
   dragTaskIndex = null;
 }
 
-function taskDrop(projectIndex, taskIndex) {
-  if (dragTaskProject !== projectIndex) return;
 
-  const list = projects[projectIndex].tasks;
-  const [task] = list.splice(dragTaskIndex, 1);
-  list.splice(taskIndex, 0, task);
 
-  save();
-  render();
+let currentDropPosition = 'before';
+
+function clearDragIndicators() {
+  document
+    .querySelectorAll('.drag-indicator-top, .drag-indicator-bottom')
+    .forEach(el => {
+      el.classList.remove('drag-indicator-top', 'drag-indicator-bottom');
+    });
+
+  currentDropPosition = 'before';
+}
+
+function handleDragIndicator(event, el) {
+  event.preventDefault();
+
+  if (!el) return;
+
+  const rect = el.getBoundingClientRect();
+  const midpoint = rect.top + rect.height / 2;
+  const placeAfter = event.clientY > midpoint;
+
+  // clear old indicator first
+  document
+    .querySelectorAll('.drag-indicator-top, .drag-indicator-bottom')
+    .forEach(node => {
+      if (node !== el) {
+        node.classList.remove('drag-indicator-top', 'drag-indicator-bottom');
+      }
+    });
+
+  el.classList.toggle('drag-indicator-top', !placeAfter);
+  el.classList.toggle('drag-indicator-bottom', placeAfter);
+
+  currentDropPosition = placeAfter ? 'after' : 'before';
+}
+
+function applyDragReorder(list, fromIndex, targetIndex) {
+  if (!Array.isArray(list)) return;
+  if (fromIndex == null || targetIndex == null) return;
+  if (fromIndex === targetIndex) {
+    clearDragIndicators();
+    return;
+  }
+
+  const [item] = list.splice(fromIndex, 1);
+
+  let insertIndex;
+  if (currentDropPosition === 'after') {
+    insertIndex = fromIndex < targetIndex ? targetIndex : targetIndex + 1;
+  } else {
+    insertIndex = fromIndex < targetIndex ? targetIndex - 1 : targetIndex;
+  }
+
+  if (insertIndex < 0) insertIndex = 0;
+  if (insertIndex > list.length) insertIndex = list.length;
+
+  list.splice(insertIndex, 0, item);
+  clearDragIndicators();
 }
 
 /* ================================
@@ -2534,16 +2799,7 @@ function dateDragEnd() {
   dragDateIndex = null;
 }
 
-function dateDrop(projectIndex, dateIndex) {
-  if (dragDateProject !== projectIndex) return;
 
-  const list = projects[projectIndex].dates;
-  const [item] = list.splice(dragDateIndex, 1);
-  list.splice(dateIndex, 0, item);
-
-  save();
-  render();
-}
 
 function formatDateMDY(isoDate) {
   if (!isoDate) return '';
@@ -2563,21 +2819,93 @@ function memberDragEnd() {
 
 function memberDrop(projectIndex, targetIndex) {
   if (dragMemberProject !== projectIndex) return;
-  if (dragMemberIndex === targetIndex) return;
-
-  const members = projects[projectIndex].members;
-
-  const [dragged] = members.splice(dragMemberIndex, 1);
-
-  // Adjust index if removing earlier item
-  const adjustedIndex =
-    dragMemberIndex < targetIndex ? targetIndex - 1 : targetIndex;
-
-  members.splice(adjustedIndex, 0, dragged);
-
+  applyDragReorder(projects[projectIndex].members, dragMemberIndex, targetIndex);
   save();
   render();
 }
+
+function taskDrop(projectIndex, taskIndex) {
+  if (dragTaskProject !== projectIndex) return;
+  applyDragReorder(projects[projectIndex].tasks, dragTaskIndex, taskIndex);
+  save();
+  render();
+}
+
+function dateDrop(projectIndex, dateIndex) {
+  if (dragDateProject !== projectIndex) return;
+  applyDragReorder(projects[projectIndex].dates, dragDateIndex, dateIndex);
+  save();
+  render();
+}
+
+function wbsDrop(projectIndex, targetIndex) {
+  if (dragWBSProject !== projectIndex) return;
+  applyDragReorder(projects[projectIndex].wbs, dragWBSIndex, targetIndex);
+  save();
+  render();
+}
+
+function linkDrop(projectIndex, targetIndex) {
+  if (dragLinkProject !== projectIndex) return;
+  applyDragReorder(projects[projectIndex].hyperlinks, dragLinkIndex, targetIndex);
+  save();
+  render();
+}
+
+function disciplineDrop(projectIndex, targetIndex) {
+  if (dragDisciplineProject !== projectIndex) return;
+  applyDragReorder(projects[projectIndex].busOpsDisciplines, dragDisciplineIndex, targetIndex);
+  save();
+  render();
+}
+
+function dcnDrop(projectIndex, targetIndex) {
+  if (dragDCNProject !== projectIndex) return;
+  applyDragReorder(projects[projectIndex].dcns, dragDCNIndex, targetIndex);
+  save();
+  render();
+}
+
+function raidDrop(projectIndex, targetIndex) {
+  if (dragRaidProject !== projectIndex) return;
+  applyDragReorder(projects[projectIndex].raid, dragRaidIndex, targetIndex);
+  save();
+  render();
+}
+
+function meetingMinutesDrop(projectIndex, targetIndex) {
+  if (dragMeetingMinutesProject !== projectIndex) return;
+  applyDragReorder(projects[projectIndex].meetingMinutes, dragMeetingMinutesIndex, targetIndex);
+  save();
+  render();
+}
+
+function chatMessagesDrop(projectIndex, targetIndex) {
+  if (dragChatMessagesProject !== projectIndex) return;
+  applyDragReorder(projects[projectIndex].chatMessages, dragChatMessagesIndex, targetIndex);
+  save();
+  render();
+}
+
+function emailTemplateDrop(projectIndex, targetIndex) {
+  if (dragEmailTemplateProject !== projectIndex) return;
+  applyDragReorder(projects[projectIndex].emailTemplates, dragEmailTemplateIndex, targetIndex);
+  save();
+  render();
+}
+
+function emailToDrop(targetIndex) {
+  if (dragEmailToIndex === null) return;
+  applyDragReorder(emailTplToEmails, dragEmailToIndex, targetIndex);
+  renderEmailTplToList();
+}
+
+function emailCcDrop(targetIndex) {
+  if (dragEmailCcIndex === null) return;
+  applyDragReorder(emailTplCcEmails, dragEmailCcIndex, targetIndex);
+  renderEmailTplCcList();
+}
+
 
 /* ================================
    WBS DRAG & DROP
@@ -2593,22 +2921,7 @@ function wbsDragEnd() {
   dragWBSIndex = null;
 }
 
-function wbsDrop(projectIndex, targetIndex) {
-  if (dragWBSProject !== projectIndex) return;
-  if (dragWBSIndex === targetIndex) return;
 
-  const list = projects[projectIndex].wbs;
-  const [item] = list.splice(dragWBSIndex, 1);
-
-  // adjust index if dragging downward
-  const adjustedIndex =
-    dragWBSIndex < targetIndex ? targetIndex - 1 : targetIndex;
-
-  list.splice(adjustedIndex, 0, item);
-
-  save();
-  render();
-}
 
 /* ================================
    HYPERLINK DRAG & DROP
@@ -2624,22 +2937,6 @@ function linkDragEnd() {
   dragLinkIndex = null;
 }
 
-function linkDrop(projectIndex, targetIndex) {
-  if (dragLinkProject !== projectIndex) return;
-  if (dragLinkIndex === targetIndex) return;
-
-  const list = projects[projectIndex].hyperlinks;
-  const [item] = list.splice(dragLinkIndex, 1);
-
-  // adjust index if dragging downward
-  const adjustedIndex =
-    dragLinkIndex < targetIndex ? targetIndex - 1 : targetIndex;
-
-  list.splice(adjustedIndex, 0, item);
-
-  save();
-  render();
-}
 
 function memberOptions(p, selected) {
   const grouped = {};
@@ -2722,21 +3019,7 @@ function disciplineDragEnd() {
   dragDisciplineIndex = null;
 }
 
-function disciplineDrop(projectIndex, targetIndex) {
-  if (dragDisciplineProject !== projectIndex) return;
-  if (dragDisciplineIndex === targetIndex) return;
 
-  const list = projects[projectIndex].busOpsDisciplines;
-  const [item] = list.splice(dragDisciplineIndex, 1);
-
-  const adjustedIndex =
-    dragDisciplineIndex < targetIndex ? targetIndex - 1 : targetIndex;
-
-  list.splice(adjustedIndex, 0, item);
-
-  save();
-  render();
-}
 
 function enableNameEdit(el) {
   el.contentEditable = "true";
@@ -2801,8 +3084,10 @@ function saveName2Edit(projectIndex, el) {
 
   const value = el.innerText.trim();
 
-  if (!value || value === 'Long project name') {
-    el.innerText = projects[projectIndex].name2 || 'Long project name';
+  if (!value) {
+    projects[projectIndex].name2 = '';
+    el.innerText = '';
+    save();
     return;
   }
 
@@ -2816,7 +3101,16 @@ function enableDescriptionEdit(el) {
   el.contentEditable = "true";
   el.classList.add('editing');
   el.focus();
+
+  // ✅ move cursor to end
+  const range = document.createRange();
+  const sel = window.getSelection();
+  range.selectNodeContents(el);
+  range.collapse(false);
+  sel.removeAllRanges();
+  sel.addRange(range);
 }
+
 
 function handleDescriptionKey(event, projectIndex, el) {
   // Enter saves, Shift+Enter inserts newline
@@ -2832,10 +3126,10 @@ function saveDescriptionEdit(projectIndex, el) {
 
   const value = el.innerText.trim();
 
-  if (!value || value === 'Project objectives / description') {
-    el.innerText =
-      projects[projectIndex].description ||
-      'Project objectives / description';
+  if (!value) {
+    projects[projectIndex].description = '';
+    el.innerText = '';
+    save();
     return;
   }
 
@@ -3197,21 +3491,7 @@ function dcnDragEnd() {
   dragDCNIndex = null;
 }
 
-function dcnDrop(projectIndex, targetIndex) {
-  if (dragDCNProject !== projectIndex) return;
-  if (dragDCNIndex === targetIndex) return;
 
-  const list = projects[projectIndex].dcns || [];
-  const [item] = list.splice(dragDCNIndex, 1);
-
-  const adjustedIndex =
-    dragDCNIndex < targetIndex ? targetIndex - 1 : targetIndex;
-
-  list.splice(adjustedIndex, 0, item);
-
-  save();
-  render();
-}
 
 function editDCN(projectIndex, dcnIndex) {
   const item = projects[projectIndex].dcns[dcnIndex];
@@ -3320,21 +3600,7 @@ function raidDragEnd() {
   dragRaidIndex = null;
 }
 
-function raidDrop(projectIndex, targetIndex) {
-  if (dragRaidProject !== projectIndex) return;
-  if (dragRaidIndex === targetIndex) return;
 
-  const list = projects[projectIndex].raid;
-  const [item] = list.splice(dragRaidIndex, 1);
-
-  const adjusted =
-    dragRaidIndex < targetIndex ? targetIndex - 1 : targetIndex;
-
-  list.splice(adjusted, 0, item);
-
-  save();
-  render();
-}
 
 function ensureExistingMemberModal() {
   let overlay = document.getElementById('existingMemberModalOverlay');
@@ -3408,6 +3674,397 @@ function ensureExistingMemberModal() {
   document.body.appendChild(overlay);
 }
 
+/* ================================
+   MEETING MINUTES
+================================ */
+
+function meetingMinutesDragStart(projectIndex, idx) {
+  dragMeetingMinutesProject = projectIndex;
+  dragMeetingMinutesIndex = idx;
+}
+
+function meetingMinutesDragEnd() {
+  dragMeetingMinutesProject = null;
+  dragMeetingMinutesIndex = null;
+}
+
+
+
+function openMeetingMinutesModal(projectIndex, meetingIndex = null) {
+  meetingMinutesModalProjectIndex = projectIndex;
+  meetingMinutesModalEditIndex = (meetingIndex === null ? null : meetingIndex);
+
+  ensureMeetingMinutesModal();
+
+  const overlay = document.getElementById('meetingMinutesModalOverlay');
+  overlay.style.display = 'flex';
+
+  const isEdit = meetingMinutesModalEditIndex !== null;
+  const saveBtn = document.getElementById('meetingMinutesSaveBtn');
+  if (saveBtn) saveBtn.textContent = isEdit ? 'Update Meeting Minutes' : 'Add Meeting Minutes';
+
+  const project = projects[projectIndex];
+  const item = isEdit ? (project.meetingMinutes || [])[meetingIndex] : null;
+
+  const typeEl = document.getElementById('meetingMinutesType');
+  const dateEl = document.getElementById('meetingMinutesDate');
+  const attendeesEl = document.getElementById('meetingMinutesAttendees');
+  const transcriptEl = document.getElementById('meetingMinutesTranscript');
+  const summaryEl = document.getElementById('meetingMinutesSummary');
+
+  if (typeEl) typeEl.value = item?.type || '';
+  if (dateEl) dateEl.value = item?.date || '';
+  if (attendeesEl) attendeesEl.value = item?.attendees || '';
+  if (transcriptEl) transcriptEl.value = item?.transcript || '';
+  if (summaryEl) summaryEl.value = item?.summary || '';
+
+  setTimeout(() => typeEl?.focus(), 0);
+}
+
+function closeMeetingMinutesModal() {
+  const overlay = document.getElementById('meetingMinutesModalOverlay');
+  if (overlay) overlay.style.display = 'none';
+
+  meetingMinutesModalProjectIndex = null;
+  meetingMinutesModalEditIndex = null;
+}
+
+function clearMeetingMinutesModal() {
+  const typeEl = document.getElementById('meetingMinutesType');
+  const dateEl = document.getElementById('meetingMinutesDate');
+  const attendeesEl = document.getElementById('meetingMinutesAttendees');
+  const transcriptEl = document.getElementById('meetingMinutesTranscript');
+  const summaryEl = document.getElementById('meetingMinutesSummary');
+
+  if (typeEl) typeEl.value = '';
+  if (dateEl) dateEl.value = '';
+  if (attendeesEl) attendeesEl.value = '';
+  if (transcriptEl) transcriptEl.value = '';
+  if (summaryEl) summaryEl.value = '';
+
+  showCopyToast('Cleared');
+}
+
+function saveMeetingMinutesFromModal() {
+  if (meetingMinutesModalProjectIndex == null) return;
+
+  const type = (document.getElementById('meetingMinutesType')?.value || '').trim();
+  const date = (document.getElementById('meetingMinutesDate')?.value || '').trim();
+  const attendees = (document.getElementById('meetingMinutesAttendees')?.value || '').trim();
+  const transcript = (document.getElementById('meetingMinutesTranscript')?.value || '').trim();
+  const summary = (document.getElementById('meetingMinutesSummary')?.value || '').trim();
+
+  if (!type) {
+    showCopyToast('Meeting Type is required');
+    document.getElementById('meetingMinutesType')?.focus();
+    return;
+  }
+
+  const project = projects[meetingMinutesModalProjectIndex];
+  project.meetingMinutes = project.meetingMinutes || [];
+
+  const payload = {
+    type,
+    date,
+    attendees,
+    transcript,
+    summary
+  };
+
+  if (meetingMinutesModalEditIndex === null) {
+    project.meetingMinutes.push(payload);
+    showCopyToast('Meeting minutes added');
+  } else {
+    project.meetingMinutes[meetingMinutesModalEditIndex] = payload;
+    showCopyToast('Meeting minutes updated');
+  }
+
+  save();
+  render();
+  closeMeetingMinutesModal();
+}
+
+function deleteMeetingMinutes(projectIndex, meetingIndex) {
+  projects[projectIndex].meetingMinutes.splice(meetingIndex, 1);
+  save();
+  render();
+}
+
+function ensureMeetingMinutesModal() {
+  let overlay = document.getElementById('meetingMinutesModalOverlay');
+  if (overlay) return;
+
+  overlay = document.createElement('div');
+  overlay.id = 'meetingMinutesModalOverlay';
+  overlay.className = 'modal-overlay';
+  overlay.style.display = 'none';
+
+  overlay.innerHTML = `
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="meetingMinutesModalTitle">
+      <div class="modal-header">
+        <div>
+          <div id="meetingMinutesModalTitle" class="modal-title">Meeting Minutes</div>
+          <div class="modal-subtitle">Record and manage meeting notes for this project</div>
+        </div>
+
+        <div style="display:flex; gap:10px; align-items:center;">
+          <button id="meetingMinutesSaveBtn" class="btn-tiny" onclick="saveMeetingMinutesFromModal()">Add Meeting Minutes</button>
+          <button class="btn-secondary btn-tiny" onclick="clearMeetingMinutesModal()">Clear</button>
+          <span class="modal-separator" style="color:var(--separator-hard); font-weight:600;">│</span>
+          <button class="btn-secondary" onclick="closeMeetingMinutesModal()">Close</button>
+        </div>
+      </div>
+
+      <div class="modal-body" style="max-height:75vh; overflow:auto;">
+        <label class="small" style="font-weight:700;">Type</label>
+        <select id="meetingMinutesType" class="modal-search">
+          <option value="">Select</option>
+          <option>Weekly Meeting</option>
+          <option>Leadership Meeting</option>
+          <option>Stakeholder Meeting</option>
+          <option>Working Session</option>
+          <option>Project Status Review</option>
+          <option>Ad Hoc Meeting</option>
+          <option>Other</option>
+        </select>
+
+        <label class="small" style="font-weight:700;">Date</label>
+        <input id="meetingMinutesDate" type="date" class="modal-search" />
+
+        <label class="small" style="font-weight:700;">Attendees</label>
+        <textarea
+          id="meetingMinutesAttendees"
+          class="modal-search"
+          placeholder="Enter attendees, separated by commas or new lines"
+          style="min-height:90px; resize:vertical;"
+        ></textarea>
+
+        <label class="small" style="font-weight:700;">Transcript</label>
+        <textarea
+          id="meetingMinutesTranscript"
+          class="modal-search"
+          placeholder="Paste or type transcript"
+          style="min-height:220px; resize:vertical;"
+        ></textarea>
+
+        <label class="small" style="font-weight:700;">Summary</label>
+        <textarea
+          id="meetingMinutesSummary"
+          class="modal-search"
+          placeholder="Add a concise summary"
+          style="min-height:150px; resize:vertical;"
+        ></textarea>
+      </div>
+
+      <div class="modal-footer">
+        <div style="height:20px; display:flex;"></div>
+      </div>
+    </div>
+  `;
+
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) closeMeetingMinutesModal();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    const open = overlay.style.display === 'flex';
+    if (open && e.key === 'Escape') {
+      closeMeetingMinutesModal();
+    }
+  });
+
+  document.body.appendChild(overlay);
+}
+
+
+/* ================================
+   CHAT MESSAGES
+================================ */
+
+function chatMessagesDragStart(projectIndex, idx) {
+  dragChatMessagesProject = projectIndex;
+  dragChatMessagesIndex = idx;
+}
+
+function chatMessagesDragEnd() {
+  dragChatMessagesProject = null;
+  dragChatMessagesIndex = null;
+}
+
+
+
+function openChatMessagesModal(projectIndex, chatIndex = null) {
+  chatMessagesModalProjectIndex = projectIndex;
+  chatMessagesModalEditIndex = (chatIndex === null ? null : chatIndex);
+
+  ensureChatMessagesModal();
+
+  const overlay = document.getElementById('chatMessagesModalOverlay');
+  overlay.style.display = 'flex';
+
+  const isEdit = chatMessagesModalEditIndex !== null;
+  const saveBtn = document.getElementById('chatMessagesSaveBtn');
+  if (saveBtn) saveBtn.textContent = isEdit ? 'Update Chat Message' : 'Add Chat Message';
+
+  const project = projects[projectIndex];
+  const item = isEdit ? (project.chatMessages || [])[chatIndex] : null;
+
+  const personEl = document.getElementById('chatMessagesPerson');
+  const topicEl = document.getElementById('chatMessagesTopic');
+  const messagesEl = document.getElementById('chatMessagesMessages');
+  const summaryEl = document.getElementById('chatMessagesSummary');
+
+  if (personEl) personEl.value = item?.person || '';
+  if (topicEl) topicEl.value = item?.topic || '';
+  if (messagesEl) messagesEl.value = item?.messages || '';
+  if (summaryEl) summaryEl.value = item?.summary || '';
+
+  setTimeout(() => personEl?.focus(), 0);
+}
+
+function closeChatMessagesModal() {
+  const overlay = document.getElementById('chatMessagesModalOverlay');
+  if (overlay) overlay.style.display = 'none';
+
+  chatMessagesModalProjectIndex = null;
+  chatMessagesModalEditIndex = null;
+}
+
+function clearChatMessagesModal() {
+  const personEl = document.getElementById('chatMessagesPerson');
+  const topicEl = document.getElementById('chatMessagesTopic');
+  const messagesEl = document.getElementById('chatMessagesMessages');
+  const summaryEl = document.getElementById('chatMessagesSummary');
+
+  if (personEl) personEl.value = '';
+  if (topicEl) topicEl.value = '';
+  if (messagesEl) messagesEl.value = '';
+  if (summaryEl) summaryEl.value = '';
+
+  showCopyToast('Cleared');
+}
+
+function saveChatMessagesFromModal() {
+  if (chatMessagesModalProjectIndex == null) return;
+
+  const person = (document.getElementById('chatMessagesPerson')?.value || '').trim();
+  const topic = (document.getElementById('chatMessagesTopic')?.value || '').trim();
+  const messages = (document.getElementById('chatMessagesMessages')?.value || '').trim();
+  const summary = (document.getElementById('chatMessagesSummary')?.value || '').trim();
+
+  if (!person) {
+    showCopyToast('Person is required');
+    document.getElementById('chatMessagesPerson')?.focus();
+    return;
+  }
+
+  const project = projects[chatMessagesModalProjectIndex];
+  project.chatMessages = project.chatMessages || [];
+
+  const payload = {
+    person,
+    topic,
+    messages,
+    summary
+  };
+
+  if (chatMessagesModalEditIndex === null) {
+    project.chatMessages.push(payload);
+    showCopyToast('Chat message added');
+  } else {
+    project.chatMessages[chatMessagesModalEditIndex] = payload;
+    showCopyToast('Chat message updated');
+  }
+
+  save();
+  render();
+  closeChatMessagesModal();
+}
+
+function deleteChatMessage(projectIndex, chatIndex) {
+  projects[projectIndex].chatMessages.splice(chatIndex, 1);
+  save();
+  render();
+}
+
+function ensureChatMessagesModal() {
+  let overlay = document.getElementById('chatMessagesModalOverlay');
+  if (overlay) return;
+
+  overlay = document.createElement('div');
+  overlay.id = 'chatMessagesModalOverlay';
+  overlay.className = 'modal-overlay';
+  overlay.style.display = 'none';
+
+  overlay.innerHTML = `
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="chatMessagesModalTitle">
+      <div class="modal-header">
+        <div>
+          <div id="chatMessagesModalTitle" class="modal-title">Chat Messages</div>
+          <div class="modal-subtitle">Store important project-related chat conversations</div>
+        </div>
+
+        <div style="display:flex; gap:10px; align-items:center;">
+          <button id="chatMessagesSaveBtn" class="btn-tiny" onclick="saveChatMessagesFromModal()">Add Chat Message</button>
+          <button class="btn-secondary btn-tiny" onclick="clearChatMessagesModal()">Clear</button>
+          <span class="modal-separator" style="color:var(--separator-hard); font-weight:600;">│</span>
+          <button class="btn-secondary" onclick="closeChatMessagesModal()">Close</button>
+        </div>
+      </div>
+
+      <div class="modal-body" style="max-height:75vh; overflow:auto;">
+        <label class="small" style="font-weight:700;">Person</label>
+        <input
+          id="chatMessagesPerson"
+          class="modal-search"
+          placeholder="Who are you chatting with?"
+        />
+
+        <label class="small" style="font-weight:700;">Question / Topic</label>
+        <input
+          id="chatMessagesTopic"
+          class="modal-search"
+          placeholder="What is being discussed?"
+        />
+
+        <label class="small" style="font-weight:700;">Messages</label>
+        <textarea
+          id="chatMessagesMessages"
+          class="modal-search"
+          placeholder="Paste or type the chat messages"
+          style="min-height:220px; resize:vertical;"
+        ></textarea>
+
+        <label class="small" style="font-weight:700;">Summary</label>
+        <textarea
+          id="chatMessagesSummary"
+          class="modal-search"
+          placeholder="Add your interpretation / summary of the chat"
+          style="min-height:150px; resize:vertical;"
+        ></textarea>
+      </div>
+
+      <div class="modal-footer">
+        <div style="height:20px; display:flex;"></div>
+      </div>
+    </div>
+  `;
+
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) closeChatMessagesModal();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    const open = overlay.style.display === 'flex';
+    if (open && e.key === 'Escape') {
+      closeChatMessagesModal();
+    }
+  });
+
+  document.body.appendChild(overlay);
+}
+
+
 
 function emailTemplateDragStart(projectIndex, idx) {
   dragEmailTemplateProject = projectIndex;
@@ -3419,22 +4076,7 @@ function emailTemplateDragEnd() {
   dragEmailTemplateIndex = null;
 }
 
-function emailTemplateDrop(projectIndex, targetIndex) {
-  if (dragEmailTemplateProject !== projectIndex) return;
-  if (dragEmailTemplateIndex === targetIndex) return;
 
-  const list = projects[projectIndex].emailTemplates || [];
-  const [item] = list.splice(dragEmailTemplateIndex, 1);
-
-  const adjusted =
-    dragEmailTemplateIndex < targetIndex ? targetIndex - 1 : targetIndex;
-
-  list.splice(adjusted, 0, item);
-  projects[projectIndex].emailTemplates = list;
-
-  save();
-  render();
-}
 
 function openEmailTemplateModal(projectIndex, templateIndex = null) {
   emailTemplateModalProjectIndex = projectIndex;
@@ -3741,7 +4383,7 @@ function renderEmailTplToList() {
       draggable="true"
       ondragstart="emailToDragStart(${idx})"
       ondragend="emailToDragEnd()"
-      ondragover="event.preventDefault()"
+      ondragover="handleDragIndicator(event, this)"
       ondrop="emailToDrop(${idx})"
     >
       <span class="to-name">${escapeHtml(r.name)}</span>
@@ -3770,15 +4412,6 @@ function emailToDragEnd() {
   dragEmailToIndex = null;
 }
 
-function emailToDrop(targetIndex) {
-  if (dragEmailToIndex === null || dragEmailToIndex === targetIndex) return;
-
-  const [item] = emailTplToEmails.splice(dragEmailToIndex, 1);
-  const adjusted = dragEmailToIndex < targetIndex ? targetIndex - 1 : targetIndex;
-  emailTplToEmails.splice(adjusted, 0, item);
-
-  renderEmailTplToList();
-}
 
 
 function getAllUniqueMembersForEmail() {
@@ -4031,7 +4664,7 @@ function renderEmailTplCcList() {
       draggable="true"
       ondragstart="emailCcDragStart(${idx})"
       ondragend="emailCcDragEnd()"
-      ondragover="event.preventDefault()"
+      ondragover="handleDragIndicator(event, this)"
       ondrop="emailCcDrop(${idx})"
     >
       <span class="cc-name">${escapeHtml(r.name)}</span>
@@ -4060,15 +4693,6 @@ function emailCcDragEnd() {
   dragEmailCcIndex = null;
 }
 
-function emailCcDrop(targetIndex) {
-  if (dragEmailCcIndex === null || dragEmailCcIndex === targetIndex) return;
-
-  const [item] = emailTplCcEmails.splice(dragEmailCcIndex, 1);
-  const adjusted = dragEmailCcIndex < targetIndex ? targetIndex - 1 : targetIndex;
-  emailTplCcEmails.splice(adjusted, 0, item);
-
-  renderEmailTplCcList();
-}
 
 
 function openEmailCcPickerModal() {
@@ -4333,6 +4957,19 @@ function changeViewMode(value) {
 
   const dayFilterSelect = document.getElementById('dayFilterSelect');
 
+  // ✅ Clear single-project focus
+  focusedProjectIndex = null;
+  localStorage.removeItem('focusedProjectIndex');
+
+  // ✅ TURN OFF WBS VIEW when using Filter Projects
+  if (value) {
+    wbsView = false;
+    localStorage.setItem('wbsView', 'false');
+
+    const wbsCheckbox = document.getElementById('wbsViewCheckbox');
+    if (wbsCheckbox) wbsCheckbox.checked = false;
+  }
+
   if (value) {
     if (dayFilterSelect) dayFilterSelect.value = '';
     dayFilter = '';
@@ -4344,6 +4981,8 @@ function changeViewMode(value) {
 
   render();
 }
+
+
 
 function enforceCollapseAll() {
   const collapseSelect = document.getElementById("collapseModeSelect");
@@ -4413,27 +5052,48 @@ rows.innerHTML = list.map(p => {
       </div>`;
   }).join('');
 }
-
 function openProjectFromSearch(projectIndex) {
+  // ✅ Set view to ALL
   viewMode = 'all';
   localStorage.setItem('viewMode', viewMode);
 
   const viewModeSelect = document.getElementById('viewModeSelect');
   if (viewModeSelect) viewModeSelect.value = '';
 
+  // ✅ Clear sort
   sortMode = '';
   localStorage.setItem('sortMode', '');
   const sortModeSelect = document.getElementById('sortModeSelect');
   if (sortModeSelect) sortModeSelect.value = '';
 
-  // Clear day filter
+  // ✅ Clear day filter
   dayFilter = '';
   localStorage.setItem('dayFilter', '');
   const dayFilterSelect = document.getElementById('dayFilterSelect');
   if (dayFilterSelect) dayFilterSelect.value = '';
 
+  // ✅ TURN OFF WBS VIEW
+  wbsView = false;
+  localStorage.setItem('wbsView', 'false');
+
+  const wbsCheckbox = document.getElementById('wbsViewCheckbox');
+  if (wbsCheckbox) wbsCheckbox.checked = false;
+
+  // ✅ FORCE EXPAND ALL PROJECTS (this is what you were missing)
+  projects.forEach(p => {
+    p.collapsed = false;
+  });
+
+  save();
+
+  // ✅ Update collapse dropdown UI
+  const collapseModeSelect = document.getElementById('collapseModeSelect');
+  if (collapseModeSelect) collapseModeSelect.value = 'expand';
+
+  // ✅ Focus selected project
   focusedProjectIndex = projectIndex;
   localStorage.setItem('focusedProjectIndex', projectIndex);
+
   closeSearchProjectsModal();
   render();
 }
@@ -4626,16 +5286,44 @@ function changeDayFilter(value) {
   localStorage.setItem('dayFilter', value || '');
 
   const viewModeSelect = document.getElementById('viewModeSelect');
+  const wbsCheckbox = document.getElementById('wbsViewCheckbox');
+
+  // ✅ Clear single-project focus
+  focusedProjectIndex = null;
+  localStorage.removeItem('focusedProjectIndex');
 
   if (value) {
+    // ✅ CLEAR view mode
     if (viewModeSelect) viewModeSelect.value = '';
-    enforceCollapseAll();
+    viewMode = '';
+    localStorage.setItem('viewMode', '');
+
+    // ✅ TURN ON WBS VIEW
+    wbsView = true;
+    localStorage.setItem('wbsView', 'true');
+    if (wbsCheckbox) wbsCheckbox.checked = true;
+
+    // ✅ FORCE EXPAND ALL PROJECTS
+    projects.forEach(p => {
+      p.collapsed = false;
+    });
+    save();
+
+    // ✅ Update collapse dropdown UI + EXECUTE expand
+    const collapseModeSelect = document.getElementById('collapseModeSelect');
+    if (collapseModeSelect) collapseModeSelect.value = 'expand';
+
+    changeCollapseMode('expand');
+
+    render();
     return;
   }
 
+  // ✅ If cleared, restore normal state (no WBS auto toggle)
   if (viewModeSelect) viewModeSelect.value = viewMode || '';
   render();
 }
+
 
 
 
@@ -4673,10 +5361,7 @@ function updateProjectNameToast() {
 }
 
 function setupProjectNameToast() {
-  if (projectNameToastObserver) {
-    projectNameToastObserver.disconnect();
-    projectNameToastObserver = null;
-  }
+
 
   hoveredProjectDiv = null;
 
@@ -4697,55 +5382,6 @@ function setupProjectNameToast() {
   updateProjectNameToast();
 }
 
-// function ensureProjectNameToast() {
-//   let toast = document.getElementById('projectNameToast');
-//   if (!toast) {
-//     toast = document.createElement('div');
-//     toast.id = 'projectNameToast';
-//     toast.className = 'project-name-toast';
-//     document.body.appendChild(toast);
-//   }
-//   return toast;
-// }
-
-// function updateProjectNameToast() {
-//   const toast = ensureProjectNameToast();
-//   let activeProject = null;
-
-//   document.querySelectorAll('.project').forEach(div => {
-//     const header = div.querySelector('.project-header-row');
-//     if (!header) return;
-//     const cardRect = div.getBoundingClientRect();
-//     const headerRect = header.getBoundingClientRect();
-
-//     if (cardRect.bottom > 0 && headerRect.bottom < 0) {
-//       activeProject = div;
-//     }
-//   });
-
-//   if (activeProject) {
-//     const idx = parseInt(activeProject.dataset.projectIndex, 10);
-//     const p = projects[idx];
-//     if (p) {
-//       toast.textContent = p.name;
-//       toast.classList.add('show');
-//       return;
-//     }
-//   }
-
-//   toast.classList.remove('show');
-// }
-
-// function setupProjectNameToast() {
-//   if (projectNameToastObserver) {
-//     projectNameToastObserver.disconnect();
-//     projectNameToastObserver = null;
-//   }
-
-//   window.removeEventListener('scroll', updateProjectNameToast);
-//   window.addEventListener('scroll', updateProjectNameToast);
-//   updateProjectNameToast();
-// }
 
 function formatBytes(bytes) {
   if (!Number.isFinite(bytes) || bytes < 0) return '0 B';
@@ -4794,6 +5430,52 @@ Note: Browsers don’t expose the exact localStorage quota reliably, so the “L
   alert(msg);
 }
 
+function toggleWBSView(checked) {
+  wbsView = !!checked;
+  localStorage.setItem('wbsView', String(wbsView));
+  render();
+}
+
+function applyWBSView() {
+  document.querySelectorAll('.project .collapsible-content').forEach(content => {
+
+    if (!wbsView) {
+      content.querySelectorAll(':scope > *').forEach(el => {
+        el.style.display = '';
+      });
+      return;
+    }
+
+    let inWbsSection = false;
+
+    content.querySelectorAll(':scope > *').forEach(el => {
+
+      // Detect section headers
+      if (el.classList && el.classList.contains('section-header')) {
+
+        const label = el.textContent.trim();
+
+        if (label === 'WBS Codes') {
+          inWbsSection = true;
+          el.style.display = '';
+        } else {
+          inWbsSection = false;
+          el.style.display = 'none';
+        }
+
+        return;
+      }
+
+      // Show only elements belonging to WBS section
+      el.style.display = inWbsSection ? '' : 'none';
+
+    });
+
+  });
+}
+
+
+
 
 normalizeProjects();
 
@@ -4808,6 +5490,14 @@ if (dayFilterSelect) dayFilterSelect.value = dayFilter;
 
 const collapseModeSelect = document.getElementById('collapseModeSelect');
 if (collapseModeSelect) collapseModeSelect.value = '';
+
+document.addEventListener('dragend', clearDragIndicators, true);
+document.addEventListener('drop', () => {
+  setTimeout(clearDragIndicators, 0);
+}, true);
+
+const wbsViewCheckbox = document.getElementById('wbsViewCheckbox');
+if (wbsViewCheckbox) wbsViewCheckbox.checked = wbsView;
 
 
 render();
