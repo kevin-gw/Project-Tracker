@@ -1025,6 +1025,16 @@ textarea {
       <option value="orp">Show ORP Related</option>
       <option value="general">Show General Template</option>
       <option value="uncheckedMeeting">Unchecked Weekly Meeting</option>
+      <option value="uncheckedMeetingRequired">Unchecked Meeting + Weekly Meeting Required</option>
+      <option value="noTitleOrDesc">No Title or No Description</option>
+      <option value="hotProjects">Hot Projects</option>
+      <option value="reviewGroup1">Review Group #1</option>
+      <option value="reviewGroup2">Review Group #2</option>
+      <option value="reviewGroup3">Review Group #3</option>
+      <option value="reviewGroup4">Review Group #4</option>
+      <option value="reviewGroup5">Review Group #5</option>
+      <option value="reviewGroup6">Review Group #6</option>
+      <option value="reviewGroup7">Review Group #7</option>
     </select>
     </label>
 
@@ -1073,6 +1083,9 @@ textarea {
       >
       <span>WBS View</span>
     </label>
+    <span id="visibleProjectCount" style="margin-left:4px; font-size:14px; font-weight:600; color:var(--text-muted); position:relative; top:9px">
+      Projects in Current View: 0
+    </span>
   </div>
 </div>
 
@@ -1087,7 +1100,7 @@ textarea {
 <script>
 let projects = JSON.parse(localStorage.getItem('projects') || '[]');
 
-let viewMode = ['active', 'archived', 'all', 'orp', 'general', 'uncheckedMeeting'].includes(localStorage.getItem('viewMode'))
+let viewMode = ['active', 'archived', 'all', 'orp', 'general', 'uncheckedMeeting', 'uncheckedMeetingRequired', 'noTitleOrDesc', 'hotProjects', 'reviewGroup1', 'reviewGroup2', 'reviewGroup3', 'reviewGroup4', 'reviewGroup5', 'reviewGroup6', 'reviewGroup7'].includes(localStorage.getItem('viewMode'))
 ? localStorage.getItem('viewMode')
 : 'active';
 
@@ -1144,6 +1157,14 @@ let dragChatMessagesProject = null;
 let dragChatMessagesIndex = null;
 
 let wbsView = localStorage.getItem('wbsView') === 'true';
+
+let meetingMinutesAttendees = [];
+let dragMeetingAttendeeIndex = null;
+
+let chatMessagesPersons = [];
+let dragChatPersonIndex = null;
+
+let collapseMode = localStorage.getItem('collapseMode') || '';
 
 function render() {
 
@@ -1206,6 +1227,10 @@ renderOrder.forEach(i => {
     if (viewMode === 'orp' && !p.orpRelated) return;
     if (viewMode === 'general' && p.name !== 'General Project') return;
     if (viewMode === 'uncheckedMeeting' && (p.archived || p.weeklyMeeting)) return;
+    if (viewMode === 'uncheckedMeetingRequired' && (p.archived || p.weeklyMeeting || p.noWeeklyMeetingRequired)) return;
+    if (viewMode === 'noTitleOrDesc' && (p.archived || ((p.name2 || '').trim() && (p.description || '').trim()))) return;
+    if (viewMode === 'hotProjects' && (p.archived || !p.hotProject)) return;
+    if (viewMode.startsWith('reviewGroup') && (p.archived || (p.dailyReviewGroup || '').trim() !== viewMode.replace('reviewGroup', ''))) return;
   }
 
   // Single-project focus only applies when no day filter is active
@@ -1623,7 +1648,12 @@ onblur="saveDescriptionEdit(${i}, this)"
   <div class="section-header">Checkboxes</div>
   <div style="display:flex; align-items:center; gap:10px 14px; flex-wrap:wrap;">
 
-  <label class="chk-pill" style="display:flex; align-items:center; gap:6px;">
+
+
+  <!-- Weekly Meeting + Day + Time -->
+  
+  <div style="display:flex; align-items:center; gap:8px;">
+    <label class="chk-pill" style="display:flex; align-items:center; gap:6px;">
     <input
       type="checkbox"
       ${p.weeklyMeeting ? 'checked' : ''}
@@ -1634,9 +1664,6 @@ onblur="saveDescriptionEdit(${i}, this)"
     >
     Weekly Meeting
   </label>
-
-  <!-- Weekly Meeting + Day + Time -->
-  <div style="display:flex; align-items:center; gap:8px;">
 
     <select
       ${!p.weeklyMeeting ? 'disabled' : ''}
@@ -1706,6 +1733,40 @@ onblur="saveDescriptionEdit(${i}, this)"
     ORP Related Project
   </label>
 
+  <!-- No Weekly Meeting Required -->
+  <label class="chk-pill">
+    <input
+      type="checkbox"
+      ${p.noWeeklyMeetingRequired ? 'checked' : ''}
+      onchange="updateField(${i}, 'noWeeklyMeetingRequired', this.checked)"
+    >
+    No Weekly Meeting Required
+  </label>
+
+</div>
+
+<!-- Review Groups -->
+  <div class="section-header">Review Groups</div>
+<div class="row" style="display:flex; align-items:center; gap:10px 14px; flex-wrap:wrap;">
+  <label style="display:flex; align-items:center; gap:6px; font-size:14px;">
+    Daily Review Group
+    <input
+      type="text"
+      value="${escapeHtml(p.dailyReviewGroup || '')}"
+      placeholder="e.g. 1"
+      style="width:80px;"
+      onchange="updateField(${i}, 'dailyReviewGroup', this.value)"
+    >
+  </label>
+
+  <label class="chk-pill">
+    <input
+      type="checkbox"
+      ${p.hotProject ? 'checked' : ''}
+      onchange="updateField(${i}, 'hotProject', this.checked)"
+    >
+    Hot Project
+  </label>
 </div>
 
       <!-- WBS Codes -->
@@ -1944,11 +2005,12 @@ onblur="saveDescriptionEdit(${i}, this)"
               <span class="small" style="margin-left:6px; color:var(--text-muted);">
                 ${m.date ? formatDateMDY(m.date) : 'No date'}
               </span>
-              ${m.attendees ? `
-                <span class="small" style="margin-left:8px; color:var(--text-muted);">
-                  — ${escapeHtml(m.attendees.length > 70 ? m.attendees.slice(0, 70) + '…' : m.attendees)}
-                </span>
-              ` : ''}
+              ${Array.isArray(m.attendees) && m.attendees.length ? (() => {
+                const names = m.attendees.map(a => a.name).join(', ');
+                return `<span class="small" style="margin-left:8px; color:var(--text-muted);">
+                  — ${escapeHtml(names.length > 70 ? names.slice(0, 70) + '…' : names)}
+                </span>`;
+              })() : ''}
             </span>
 
             <button
@@ -1990,7 +2052,11 @@ onblur="saveDescriptionEdit(${i}, this)"
         >
           <span class="emailtpl-content">
             <span>
-              <span class="emailtpl-name">${escapeHtml(c.person || 'Unknown')}</span>
+              <span class="emailtpl-name">${escapeHtml(
+  Array.isArray(c.persons) && c.persons.length
+    ? c.persons.map(p => p.name).join(', ')
+    : 'Unknown'
+)}</span>
               ${c.topic ? `
                 <span class="small" style="margin-left:8px; color:var(--text-muted);">
                   — ${escapeHtml(c.topic.length > 80 ? c.topic.slice(0, 80) + '…' : c.topic)}
@@ -2140,8 +2206,11 @@ ${(p.emailTemplates || []).map((t, idx) => `
 
   
   });
+  const visibleCount = container.querySelectorAll('.project').length;
+const visibleCountEl = document.getElementById('visibleProjectCount');
+if (visibleCountEl) visibleCountEl.textContent = `Projects in Current View: ${visibleCount}`;
   applyWBSView();
-}
+} //end Render
 
 function addProject() {
   const name = document.getElementById('newProjectName').value.trim();
@@ -2167,6 +2236,7 @@ function addProject() {
     weeklyMeetingTime:'',
     weeklyMeetingDuration: '',
     weeklyMeetingTimezone:'PST',
+    noWeeklyMeetingRequired: false,
     skippedAllTasks:false,
     searchedEmailForLatestStatus:false,
     orpRelated:false,
@@ -2196,6 +2266,8 @@ function addProject() {
     busOpsDisciplineConfirmedDate: '',
     busOpsDisciplineConfirmedBy: '',
     dcns: [],
+    dailyReviewGroup: '',
+    hotProject: false,
     projectPhase: '',
     notesHeight: 0
   });
@@ -2222,6 +2294,18 @@ function addProject() {
   const sortModeSelect = document.getElementById('sortModeSelect');
   if (sortModeSelect) sortModeSelect.value = '';
 
+  // Enforce Expand All
+  collapseMode = 'expand';
+  localStorage.setItem('collapseMode', 'expand');
+  const collapseModeSelect = document.getElementById('collapseModeSelect');
+  if (collapseModeSelect) collapseModeSelect.value = 'expand';
+  projects.forEach(p => { p.collapsed = false; });
+
+  // Turn off WBS View
+  wbsView = false;
+  localStorage.setItem('wbsView', 'false');
+  const wbsCheckbox = document.getElementById('wbsViewCheckbox');
+  if (wbsCheckbox) wbsCheckbox.checked = false;
 
   document.getElementById('newProjectName').value = '';
   save();
@@ -2255,6 +2339,9 @@ function normalizeProjects() {
     p.busOpsDisciplineConfirmedDate ??= '';
     p.busOpsDisciplineConfirmedBy ??= '';
     p.searchedEmailForLatestStatus ??= false;
+    p.noWeeklyMeetingRequired ??= false;
+    p.dailyReviewGroup ??= '';
+    p.hotProject ??= false;
     p.dcns ??= [];
     p.meetingMinutes ??= [];
     p.emailTemplates ??= [];
@@ -2262,6 +2349,23 @@ function normalizeProjects() {
     p.chatMessages ??= [];
     p.notesHeight ??= 0;
     (p.emailTemplates || []).forEach(t => { t.toEmails ??= []; t.ccEmails ??= []; });
+    // Add with the other meeting minutes normalizations
+    (p.meetingMinutes || []).forEach(m => {
+      if (typeof m.attendees === 'string') m.attendees = [];
+      if (!Array.isArray(m.attendees)) m.attendees = [];
+    });
+    // Add with the other chatMessages normalizations
+(p.chatMessages || []).forEach(c => {
+  if (typeof c.person === 'string') {
+    c.persons = c.person ? [{ name: c.person, email: '' }] : [];
+    delete c.person;
+  }
+  if (c.person && typeof c.person === 'object' && !Array.isArray(c.person)) {
+    c.persons = [c.person];
+    delete c.person;
+  }
+  if (!Array.isArray(c.persons)) c.persons = [];
+});
   });
 
   save();
@@ -2581,9 +2685,17 @@ function exportData() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
 
-  const date = new Date().toISOString().replace(/[:.]/g, '-');
+  const now = new Date();
+  const m = now.getMonth() + 1;
+  const d = now.getDate();
+  const y = now.getFullYear();
+  const sec = now.getSeconds();
+  let hrs = now.getHours();
+  const mins = String(now.getMinutes()).padStart(2, '0');
+  const ampm = hrs >= 12 ? 'PM' : 'AM';
+  hrs = hrs % 12 || 12;
   a.href = url;
-  a.download = `project-tracker-backup-${date}.json`;
+  a.download = `project-tracker_${m}.${d}.${y}_${hrs}.${mins}${ampm}_${sec}.json`;
 
   document.body.appendChild(a);
   a.click();
@@ -3708,13 +3820,14 @@ function openMeetingMinutesModal(projectIndex, meetingIndex = null) {
 
   const typeEl = document.getElementById('meetingMinutesType');
   const dateEl = document.getElementById('meetingMinutesDate');
-  const attendeesEl = document.getElementById('meetingMinutesAttendees');
+
   const transcriptEl = document.getElementById('meetingMinutesTranscript');
   const summaryEl = document.getElementById('meetingMinutesSummary');
 
   if (typeEl) typeEl.value = item?.type || '';
   if (dateEl) dateEl.value = item?.date || '';
-  if (attendeesEl) attendeesEl.value = item?.attendees || '';
+  meetingMinutesAttendees = item?.attendees ? JSON.parse(JSON.stringify(item.attendees)) : [];
+renderMeetingAttendeesList();
   if (transcriptEl) transcriptEl.value = item?.transcript || '';
   if (summaryEl) summaryEl.value = item?.summary || '';
 
@@ -3732,13 +3845,13 @@ function closeMeetingMinutesModal() {
 function clearMeetingMinutesModal() {
   const typeEl = document.getElementById('meetingMinutesType');
   const dateEl = document.getElementById('meetingMinutesDate');
-  const attendeesEl = document.getElementById('meetingMinutesAttendees');
+  meetingMinutesAttendees = [];
+renderMeetingAttendeesList();
   const transcriptEl = document.getElementById('meetingMinutesTranscript');
   const summaryEl = document.getElementById('meetingMinutesSummary');
 
   if (typeEl) typeEl.value = '';
   if (dateEl) dateEl.value = '';
-  if (attendeesEl) attendeesEl.value = '';
   if (transcriptEl) transcriptEl.value = '';
   if (summaryEl) summaryEl.value = '';
 
@@ -3750,7 +3863,7 @@ function saveMeetingMinutesFromModal() {
 
   const type = (document.getElementById('meetingMinutesType')?.value || '').trim();
   const date = (document.getElementById('meetingMinutesDate')?.value || '').trim();
-  const attendees = (document.getElementById('meetingMinutesAttendees')?.value || '').trim();
+  const attendees = JSON.parse(JSON.stringify(meetingMinutesAttendees));
   const transcript = (document.getElementById('meetingMinutesTranscript')?.value || '').trim();
   const summary = (document.getElementById('meetingMinutesSummary')?.value || '').trim();
 
@@ -3819,6 +3932,7 @@ function ensureMeetingMinutesModal() {
         <label class="small" style="font-weight:700;">Type</label>
         <select id="meetingMinutesType" class="modal-search">
           <option value="">Select</option>
+          <option>Kickoff Meeting</option>
           <option>Weekly Meeting</option>
           <option>Leadership Meeting</option>
           <option>Stakeholder Meeting</option>
@@ -3831,20 +3945,20 @@ function ensureMeetingMinutesModal() {
         <label class="small" style="font-weight:700;">Date</label>
         <input id="meetingMinutesDate" type="date" class="modal-search" />
 
-        <label class="small" style="font-weight:700;">Attendees</label>
-        <textarea
-          id="meetingMinutesAttendees"
-          class="modal-search"
-          placeholder="Enter attendees, separated by commas or new lines"
-          style="min-height:90px; resize:vertical;"
-        ></textarea>
+        <div style="display:flex; align-items:center; gap:10px; margin-top:4px;">
+          <label class="small" style="font-weight:700; margin:0;">Attendees</label>
+          <button class="btn-shorter" type="button" onclick="openMeetingAttendeesPickerModal()" style="font-size:12px; padding:4px 10px;">
+            Add Attendees
+          </button>
+        </div>
+        <div id="meetingAttendeesListContainer" style="display:flex; flex-direction:column; gap:0;"></div>
 
         <label class="small" style="font-weight:700;">Transcript</label>
         <textarea
           id="meetingMinutesTranscript"
           class="modal-search"
           placeholder="Paste or type transcript"
-          style="min-height:220px; resize:vertical;"
+          style="min-height:150px; resize:vertical;"
         ></textarea>
 
         <label class="small" style="font-weight:700;">Summary</label>
@@ -3852,7 +3966,7 @@ function ensureMeetingMinutesModal() {
           id="meetingMinutesSummary"
           class="modal-search"
           placeholder="Add a concise summary"
-          style="min-height:150px; resize:vertical;"
+          style="min-height:220px; resize:vertical;"
         ></textarea>
       </div>
 
@@ -3869,6 +3983,8 @@ function ensureMeetingMinutesModal() {
   document.addEventListener('keydown', (e) => {
     const open = overlay.style.display === 'flex';
     if (open && e.key === 'Escape') {
+      const picker = document.getElementById('meetingAttendeesPickerOverlay');
+      if (picker && picker.style.display === 'flex') return;
       closeMeetingMinutesModal();
     }
   });
@@ -3909,12 +4025,13 @@ function openChatMessagesModal(projectIndex, chatIndex = null) {
   const project = projects[projectIndex];
   const item = isEdit ? (project.chatMessages || [])[chatIndex] : null;
 
-  const personEl = document.getElementById('chatMessagesPerson');
+  chatMessagesPersons = item?.persons ? JSON.parse(JSON.stringify(item.persons)) : [];
+renderChatPersonsList();
   const topicEl = document.getElementById('chatMessagesTopic');
   const messagesEl = document.getElementById('chatMessagesMessages');
   const summaryEl = document.getElementById('chatMessagesSummary');
 
-  if (personEl) personEl.value = item?.person || '';
+
   if (topicEl) topicEl.value = item?.topic || '';
   if (messagesEl) messagesEl.value = item?.messages || '';
   if (summaryEl) summaryEl.value = item?.summary || '';
@@ -3931,12 +4048,13 @@ function closeChatMessagesModal() {
 }
 
 function clearChatMessagesModal() {
-  const personEl = document.getElementById('chatMessagesPerson');
+  chatMessagesPersons = [];
+  renderChatPersonsList();
   const topicEl = document.getElementById('chatMessagesTopic');
   const messagesEl = document.getElementById('chatMessagesMessages');
   const summaryEl = document.getElementById('chatMessagesSummary');
 
-  if (personEl) personEl.value = '';
+
   if (topicEl) topicEl.value = '';
   if (messagesEl) messagesEl.value = '';
   if (summaryEl) summaryEl.value = '';
@@ -3947,22 +4065,21 @@ function clearChatMessagesModal() {
 function saveChatMessagesFromModal() {
   if (chatMessagesModalProjectIndex == null) return;
 
-  const person = (document.getElementById('chatMessagesPerson')?.value || '').trim();
+  const persons = JSON.parse(JSON.stringify(chatMessagesPersons));
   const topic = (document.getElementById('chatMessagesTopic')?.value || '').trim();
   const messages = (document.getElementById('chatMessagesMessages')?.value || '').trim();
   const summary = (document.getElementById('chatMessagesSummary')?.value || '').trim();
 
-  if (!person) {
-    showCopyToast('Person is required');
-    document.getElementById('chatMessagesPerson')?.focus();
-    return;
-  }
+if (!persons.length) {
+  showCopyToast('At least one person is required — use Add People');
+  return;
+}
 
   const project = projects[chatMessagesModalProjectIndex];
   project.chatMessages = project.chatMessages || [];
 
   const payload = {
-    person,
+    persons,
     topic,
     messages,
     summary
@@ -4013,12 +4130,13 @@ function ensureChatMessagesModal() {
       </div>
 
       <div class="modal-body" style="max-height:75vh; overflow:auto;">
-        <label class="small" style="font-weight:700;">Person</label>
-        <input
-          id="chatMessagesPerson"
-          class="modal-search"
-          placeholder="Who are you chatting with?"
-        />
+        <div style="display:flex; align-items:center; gap:10px; margin-top:4px;">
+  <label class="small" style="font-weight:700; margin:0;">People</label>
+  <button class="btn-shorter" type="button" onclick="openChatPersonPickerModal()" style="font-size:12px; padding:4px 10px;">
+    Add People
+  </button>
+</div>
+<div id="chatPersonsListContainer" style="display:flex; flex-direction:column; gap:0;"></div>
 
         <label class="small" style="font-weight:700;">Question / Topic</label>
         <input
@@ -4032,7 +4150,7 @@ function ensureChatMessagesModal() {
           id="chatMessagesMessages"
           class="modal-search"
           placeholder="Paste or type the chat messages"
-          style="min-height:220px; resize:vertical;"
+          style="min-height:150px; resize:vertical;"
         ></textarea>
 
         <label class="small" style="font-weight:700;">Summary</label>
@@ -4040,7 +4158,7 @@ function ensureChatMessagesModal() {
           id="chatMessagesSummary"
           class="modal-search"
           placeholder="Add your interpretation / summary of the chat"
-          style="min-height:150px; resize:vertical;"
+          style="min-height:220px; resize:vertical;"
         ></textarea>
       </div>
 
@@ -4057,6 +4175,8 @@ function ensureChatMessagesModal() {
   document.addEventListener('keydown', (e) => {
     const open = overlay.style.display === 'flex';
     if (open && e.key === 'Escape') {
+      const picker = document.getElementById('chatPersonPickerOverlay');
+      if (picker && picker.style.display === 'flex') return;
       closeChatMessagesModal();
     }
   });
@@ -4985,10 +5105,11 @@ function changeViewMode(value) {
 
 
 function enforceCollapseAll() {
+  collapseMode = 'collapse';
+  localStorage.setItem('collapseMode', 'collapse');
+
   const collapseSelect = document.getElementById("collapseModeSelect");
-  if (collapseSelect) {
-    collapseSelect.value = "collapse";
-  }
+  if (collapseSelect) collapseSelect.value = "collapse";
 
   changeCollapseMode("collapse");
 }
@@ -5087,6 +5208,8 @@ function openProjectFromSearch(projectIndex) {
   save();
 
   // ✅ Update collapse dropdown UI
+  collapseMode = 'expand';
+  localStorage.setItem('collapseMode', 'expand');
   const collapseModeSelect = document.getElementById('collapseModeSelect');
   if (collapseModeSelect) collapseModeSelect.value = 'expand';
 
@@ -5155,7 +5278,9 @@ function ensureSearchProjectsModal() {
 function toggleCollapse(projectIndex) {
   projects[projectIndex].collapsed = !projects[projectIndex].collapsed;
 
-  // ✅ Clear the Collapse dropdown selection whenever a card-level collapse/expand is used
+  collapseMode = '';
+  localStorage.setItem('collapseMode', '');
+
   const collapseModeSelect = document.getElementById('collapseModeSelect');
   if (collapseModeSelect) collapseModeSelect.value = '';
 
@@ -5180,6 +5305,11 @@ document.addEventListener('paste', function(e) {
 });
 
 function changeCollapseMode(mode) {
+  
+  collapseMode = mode;
+  localStorage.setItem('collapseMode', mode);
+
+
   const renderOrder = projects.map((_, i) => i);
 
   renderOrder.forEach(i => {
@@ -5194,6 +5324,10 @@ function changeCollapseMode(mode) {
     if (viewMode === 'orp' && !p.orpRelated) return;
     if (viewMode === 'general' && p.name !== 'General Project') return;
     if (viewMode === 'uncheckedMeeting' && (p.archived || p.weeklyMeeting)) return;
+    if (viewMode === 'uncheckedMeetingRequired' && (p.archived || p.weeklyMeeting || p.noWeeklyMeetingRequired)) return;
+    if (viewMode === 'noTitleOrDesc' && (p.archived || ((p.name2 || '').trim() && (p.description || '').trim()))) return;
+    if (viewMode === 'hotProjects' && (p.archived || !p.hotProject)) return;
+    if (viewMode.startsWith('reviewGroup') && (p.archived || (p.dailyReviewGroup || '').trim() !== viewMode.replace('reviewGroup', ''))) return;
   }
   if (focusedProjectIndex !== null && i !== focusedProjectIndex) return;
 
@@ -5310,6 +5444,8 @@ function changeDayFilter(value) {
     save();
 
     // ✅ Update collapse dropdown UI + EXECUTE expand
+    collapseMode = 'expand';
+    localStorage.setItem('collapseMode', 'expand');
     const collapseModeSelect = document.getElementById('collapseModeSelect');
     if (collapseModeSelect) collapseModeSelect.value = 'expand';
 
@@ -5474,7 +5610,685 @@ function applyWBSView() {
   });
 }
 
+/* ================================
+   MEETING ATTENDEES LIST + PICKER
+================================ */
 
+function renderMeetingAttendeesList() {
+  const container = document.getElementById('meetingAttendeesListContainer');
+  if (!container) return;
+
+  if (meetingMinutesAttendees.length === 0) {
+    container.innerHTML = '<span class="small" style="color:var(--text-muted); padding:4px 0;">No attendees added yet</span>';
+    return;
+  }
+
+  container.innerHTML = meetingMinutesAttendees.map((r, idx) => `
+    <div
+      class="emailtpl-to-item"
+      draggable="true"
+      ondragstart="meetingAttendeeDragStart(${idx})"
+      ondragend="meetingAttendeeDragEnd()"
+      ondragover="handleDragIndicator(event, this)"
+      ondrop="meetingAttendeeDrop(${idx})"
+    >
+      <span class="to-name">${escapeHtml(r.name)}</span>
+      <span class="to-email">(${escapeHtml(r.email)})</span>
+
+      <button
+        onclick="event.stopPropagation(); deleteMeetingAttendee(${idx})"
+        onmousedown="event.stopPropagation()"
+        draggable="false"
+        style="font-size:11px; padding:2px 6px;"
+      >🗑️</button>
+    </div>
+  `).join('');
+}
+
+function deleteMeetingAttendee(index) {
+  meetingMinutesAttendees.splice(index, 1);
+  renderMeetingAttendeesList();
+}
+
+function meetingAttendeeDragStart(index) {
+  dragMeetingAttendeeIndex = index;
+}
+
+function meetingAttendeeDragEnd() {
+  dragMeetingAttendeeIndex = null;
+}
+
+function meetingAttendeeDrop(targetIndex) {
+  if (dragMeetingAttendeeIndex === null) return;
+  applyDragReorder(meetingMinutesAttendees, dragMeetingAttendeeIndex, targetIndex);
+  renderMeetingAttendeesList();
+}
+
+function getProjectMembersForPicker(projectIndex) {
+  const project = projects[projectIndex];
+  const map = new Map();
+
+  (project.members || []).forEach(m => {
+    const name = (m.name || '').trim() || 'No Name';
+    const email = (m.email || '').trim() || 'No Email';
+    if (email.toLowerCase() === 'no email') return;
+
+    const key = email.toLowerCase();
+    if (!map.has(key)) {
+      map.set(key, { key, name, email });
+    }
+  });
+
+  return Array.from(map.values()).sort((a, b) =>
+    a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
+  );
+}
+
+function openMeetingAttendeesPickerModal() {
+  ensureMeetingAttendeesPickerModal();
+
+  const overlay = document.getElementById('meetingAttendeesPickerOverlay');
+  overlay.style.display = 'flex';
+
+  const existingSet = new Set(meetingMinutesAttendees.map(r => r.email.toLowerCase()));
+  const all = getProjectMembersForPicker(meetingMinutesModalProjectIndex)
+    .filter(m => !existingSet.has(m.email.toLowerCase()));
+
+  overlay._allMembers = all;
+  overlay._selectedKeys = new Set();
+
+  renderMeetingAttendeesPickerList(all);
+  updateMeetingAttendeesPickerCount();
+
+  const search = document.getElementById('meetingAttendeesPickerSearch');
+  if (search) { search.value = ''; search.focus(); }
+}
+
+function closeMeetingAttendeesPickerModal() {
+  const overlay = document.getElementById('meetingAttendeesPickerOverlay');
+  if (overlay) overlay.style.display = 'none';
+}
+
+function filterMeetingAttendeesPickerList(query) {
+  const overlay = document.getElementById('meetingAttendeesPickerOverlay');
+  if (!overlay || !overlay._allMembers) return;
+
+  const q = (query || '').trim().toLowerCase();
+  const filtered = !q
+    ? overlay._allMembers
+    : overlay._allMembers.filter(m =>
+        m.name.toLowerCase().includes(q) || m.email.toLowerCase().includes(q)
+      );
+
+  renderMeetingAttendeesPickerList(filtered);
+}
+
+function renderMeetingAttendeesPickerList(list) {
+  const rows = document.getElementById('meetingAttendeesPickerRows');
+  if (!rows) return;
+
+  const overlay = document.getElementById('meetingAttendeesPickerOverlay');
+  const selected = overlay?._selectedKeys || new Set();
+
+  if (!list || list.length === 0) {
+    rows.innerHTML = `
+      <div class="modal-row" style="grid-template-columns: 34px 1.2fr 1.6fr;">
+        <div></div>
+        <div class="muted">No matches</div>
+        <div></div>
+      </div>`;
+    return;
+  }
+
+  rows.innerHTML = list.map(m => {
+    const checked = selected.has(m.key) ? 'checked' : '';
+    return `
+      <div class="modal-row" style="grid-template-columns: 34px 1.2fr 1.6fr;">
+        <div>
+          <input type="checkbox"
+            ${checked}
+            data-key="${escapeHtml(m.key)}"
+            onchange="toggleMeetingAttendeesPickerSelection(this.dataset.key, this.checked)"
+            onclick="event.stopPropagation()">
+        </div>
+        <div>${escapeHtml(m.name)}</div>
+        <div class="muted">${escapeHtml(m.email)}</div>
+      </div>`;
+  }).join('');
+}
+
+function toggleMeetingAttendeesPickerSelection(key, checked) {
+  const overlay = document.getElementById('meetingAttendeesPickerOverlay');
+  if (!overlay) return;
+
+  overlay._selectedKeys ??= new Set();
+  if (checked) overlay._selectedKeys.add(key);
+  else overlay._selectedKeys.delete(key);
+
+  updateMeetingAttendeesPickerCount();
+}
+
+function updateMeetingAttendeesPickerCount() {
+  const overlay = document.getElementById('meetingAttendeesPickerOverlay');
+  const count = overlay?._selectedKeys ? overlay._selectedKeys.size : 0;
+  const el = document.getElementById('meetingAttendeesPickerSelectedCount');
+  if (el) el.textContent = `Selected: ${count}`;
+}
+
+function clearMeetingAttendeesPickerSelection() {
+  const overlay = document.getElementById('meetingAttendeesPickerOverlay');
+  if (!overlay) return;
+
+  overlay._selectedKeys = new Set();
+  updateMeetingAttendeesPickerCount();
+
+  const q = (document.getElementById('meetingAttendeesPickerSearch')?.value || '').trim();
+  filterMeetingAttendeesPickerList(q);
+}
+
+function addSelectedMeetingAttendees() {
+  const overlay = document.getElementById('meetingAttendeesPickerOverlay');
+  const selectedKeys = overlay?._selectedKeys ? Array.from(overlay._selectedKeys) : [];
+
+  if (selectedKeys.length === 0) {
+    showCopyToast('No members selected');
+    return;
+  }
+
+  const all = overlay?._allMembers || [];
+  const existingSet = new Set(meetingMinutesAttendees.map(r => r.email.toLowerCase()));
+  let added = 0;
+
+  selectedKeys.forEach(key => {
+    const found = all.find(m => m.key === key);
+    if (!found) return;
+    if (existingSet.has(found.email.toLowerCase())) return;
+
+    meetingMinutesAttendees.push({ name: found.name, email: found.email });
+    existingSet.add(found.email.toLowerCase());
+    added++;
+  });
+
+  renderMeetingAttendeesList();
+  showCopyToast(`${added} attendee(s) added`);
+  closeMeetingAttendeesPickerModal();
+}
+
+function ensureMeetingAttendeesPickerModal() {
+  let overlay = document.getElementById('meetingAttendeesPickerOverlay');
+  if (overlay) return;
+
+  overlay = document.createElement('div');
+  overlay.id = 'meetingAttendeesPickerOverlay';
+  overlay.className = 'modal-overlay';
+  overlay.style.display = 'none';
+  overlay.style.zIndex = '99999';
+
+  overlay.innerHTML = `
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="meetingAttendeesPickerTitle">
+      <div class="modal-header">
+        <div>
+          <div id="meetingAttendeesPickerTitle" class="modal-title">Select Attendees</div>
+          <div class="modal-subtitle">
+            Pick from project members
+            <span id="meetingAttendeesPickerSelectedCount" class="muted" style="margin-left:10px;">Selected: 0</span>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:10px;">
+          <button class="btn-tiny" onclick="addSelectedMeetingAttendees()">Add</button>
+          <button class="btn-secondary btn-tiny" onclick="clearMeetingAttendeesPickerSelection()">Clear</button>
+          <span class="modal-separator" style="color:var(--separator-hard); font-weight:600;">│</span>
+          <button class="btn-secondary" onclick="closeMeetingAttendeesPickerModal()">Close</button>
+        </div>
+      </div>
+
+      <div class="modal-body">
+        <input
+          id="meetingAttendeesPickerSearch"
+          class="modal-search"
+          placeholder="Search by name or email..."
+          oninput="filterMeetingAttendeesPickerList(this.value)"
+        />
+
+        <div class="modal-list">
+          <div class="modal-list-header" style="grid-template-columns: 34px 1.2fr 1.6fr;">
+            <div></div>
+            <div>Name</div>
+            <div>Email</div>
+          </div>
+
+          <div id="meetingAttendeesPickerRows" class="modal-rows"></div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <div style="height:20px; display:flex;"></div>
+      </div>
+    </div>
+  `;
+
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) closeMeetingAttendeesPickerModal();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (overlay.style.display === 'flex' && e.key === 'Escape') {
+      e.stopPropagation();
+      closeMeetingAttendeesPickerModal();
+    }
+  });
+
+  document.body.appendChild(overlay);
+}
+
+/* ================================
+   CHAT PERSON PICKER
+================================ */
+
+function renderChatPersonDisplay() {
+  const container = document.getElementById('chatPersonContainer');
+  if (!container) return;
+
+  if (!chatMessagesPerson) {
+    container.innerHTML = '<span class="small" style="color:var(--text-muted); padding:4px 0;">No person selected</span>';
+    return;
+  }
+
+  container.innerHTML = `
+    <div class="emailtpl-to-item" style="cursor:default;">
+      <span class="to-name">${escapeHtml(chatMessagesPerson.name)}</span>
+      <span class="to-email">(${escapeHtml(chatMessagesPerson.email)})</span>
+      <button
+        onclick="event.stopPropagation(); chatMessagesPerson = null; renderChatPersonDisplay();"
+        style="font-size:11px; padding:2px 6px;"
+      >🗑️</button>
+    </div>
+  `;
+}
+
+function openChatPersonPickerModal() {
+  ensureChatPersonPickerModal();
+
+  const overlay = document.getElementById('chatPersonPickerOverlay');
+  overlay.style.display = 'flex';
+
+  const all = getProjectMembersForPicker(chatMessagesModalProjectIndex);
+
+  overlay._allMembers = all;
+
+  renderChatPersonPickerList(all);
+
+  const search = document.getElementById('chatPersonPickerSearch');
+  if (search) { search.value = ''; search.focus(); }
+}
+
+function closeChatPersonPickerModal() {
+  const overlay = document.getElementById('chatPersonPickerOverlay');
+  if (overlay) overlay.style.display = 'none';
+}
+
+function filterChatPersonPickerList(query) {
+  const overlay = document.getElementById('chatPersonPickerOverlay');
+  if (!overlay || !overlay._allMembers) return;
+
+  const q = (query || '').trim().toLowerCase();
+  const filtered = !q
+    ? overlay._allMembers
+    : overlay._allMembers.filter(m =>
+        m.name.toLowerCase().includes(q) || m.email.toLowerCase().includes(q)
+      );
+
+  renderChatPersonPickerList(filtered);
+}
+
+function renderChatPersonPickerList(list) {
+  const rows = document.getElementById('chatPersonPickerRows');
+  if (!rows) return;
+
+  if (!list || list.length === 0) {
+    rows.innerHTML = `
+      <div class="modal-row" style="grid-template-columns: 1.2fr 1.6fr auto;">
+        <div class="muted">No matches</div>
+        <div></div>
+        <div></div>
+      </div>`;
+    return;
+  }
+
+  rows.innerHTML = list.map(m => `
+    <div class="modal-row" style="grid-template-columns: 1.2fr 1.6fr auto; cursor:pointer;"
+         onclick="selectChatPerson('${escapeHtml(m.name)}', '${escapeHtml(m.email)}')">
+      <div>${escapeHtml(m.name)}</div>
+      <div class="muted">${escapeHtml(m.email)}</div>
+      <div>
+        <button class="btn-shorter" onclick="event.stopPropagation(); selectChatPerson('${escapeHtml(m.name)}', '${escapeHtml(m.email)}')"
+                style="font-size:12px; padding:4px 10px;">Select</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function selectChatPerson(name, email) {
+  chatMessagesPerson = { name, email };
+  renderChatPersonDisplay();
+  showCopyToast(`Selected: ${name}`);
+  closeChatPersonPickerModal();
+}
+
+function ensureChatPersonPickerModal() {
+  let overlay = document.getElementById('chatPersonPickerOverlay');
+  if (overlay) return;
+
+  overlay = document.createElement('div');
+  overlay.id = 'chatPersonPickerOverlay';
+  overlay.className = 'modal-overlay';
+  overlay.style.display = 'none';
+  overlay.style.zIndex = '99999';
+
+  overlay.innerHTML = `
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="chatPersonPickerTitle">
+      <div class="modal-header">
+        <div>
+          <div id="chatPersonPickerTitle" class="modal-title">Select Person</div>
+          <div class="modal-subtitle">Pick a project member</div>
+        </div>
+
+        <div style="display:flex; gap:10px;">
+          <button class="btn-secondary" onclick="closeChatPersonPickerModal()">Close</button>
+        </div>
+      </div>
+
+      <div class="modal-body">
+        <input
+          id="chatPersonPickerSearch"
+          class="modal-search"
+          placeholder="Search by name or email..."
+          oninput="filterChatPersonPickerList(this.value)"
+        />
+
+        <div class="modal-list">
+          <div class="modal-list-header" style="grid-template-columns: 1.2fr 1.6fr auto;">
+            <div>Name</div>
+            <div>Email</div>
+            <div></div>
+          </div>
+
+          <div id="chatPersonPickerRows" class="modal-rows"></div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <div style="height:20px; display:flex;"></div>
+      </div>
+    </div>
+  `;
+
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) closeChatPersonPickerModal();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (overlay.style.display === 'flex' && e.key === 'Escape') {
+      e.stopPropagation();
+      closeChatPersonPickerModal();
+    }
+  });
+
+  document.body.appendChild(overlay);
+}
+
+/* ================================
+   CHAT PERSONS LIST + PICKER
+================================ */
+
+function renderChatPersonsList() {
+  const container = document.getElementById('chatPersonsListContainer');
+  if (!container) return;
+
+  if (chatMessagesPersons.length === 0) {
+    container.innerHTML = '<span class="small" style="color:var(--text-muted); padding:4px 0;">No people added yet</span>';
+    return;
+  }
+
+  container.innerHTML = chatMessagesPersons.map((r, idx) => `
+    <div
+      class="emailtpl-to-item"
+      draggable="true"
+      ondragstart="chatPersonDragStart(${idx})"
+      ondragend="chatPersonDragEnd()"
+      ondragover="handleDragIndicator(event, this)"
+      ondrop="chatPersonDrop(${idx})"
+    >
+      <span class="to-name">${escapeHtml(r.name)}</span>
+      <span class="to-email">(${escapeHtml(r.email)})</span>
+
+      <button
+        onclick="event.stopPropagation(); deleteChatPerson(${idx})"
+        onmousedown="event.stopPropagation()"
+        draggable="false"
+        style="font-size:11px; padding:2px 6px;"
+      >🗑️</button>
+    </div>
+  `).join('');
+}
+
+function deleteChatPerson(index) {
+  chatMessagesPersons.splice(index, 1);
+  renderChatPersonsList();
+}
+
+function chatPersonDragStart(index) {
+  dragChatPersonIndex = index;
+}
+
+function chatPersonDragEnd() {
+  dragChatPersonIndex = null;
+}
+
+function chatPersonDrop(targetIndex) {
+  if (dragChatPersonIndex === null) return;
+  applyDragReorder(chatMessagesPersons, dragChatPersonIndex, targetIndex);
+  renderChatPersonsList();
+}
+
+function openChatPersonPickerModal() {
+  ensureChatPersonPickerModal();
+
+  const overlay = document.getElementById('chatPersonPickerOverlay');
+  overlay.style.display = 'flex';
+
+  const existingSet = new Set(chatMessagesPersons.map(r => r.email.toLowerCase()));
+  const all = getProjectMembersForPicker(chatMessagesModalProjectIndex)
+    .filter(m => !existingSet.has(m.email.toLowerCase()));
+
+  overlay._allMembers = all;
+  overlay._selectedKeys = new Set();
+
+  renderChatPersonPickerList(all);
+  updateChatPersonPickerCount();
+
+  const search = document.getElementById('chatPersonPickerSearch');
+  if (search) { search.value = ''; search.focus(); }
+}
+
+function closeChatPersonPickerModal() {
+  const overlay = document.getElementById('chatPersonPickerOverlay');
+  if (overlay) overlay.style.display = 'none';
+}
+
+function filterChatPersonPickerList(query) {
+  const overlay = document.getElementById('chatPersonPickerOverlay');
+  if (!overlay || !overlay._allMembers) return;
+
+  const q = (query || '').trim().toLowerCase();
+  const filtered = !q
+    ? overlay._allMembers
+    : overlay._allMembers.filter(m =>
+        m.name.toLowerCase().includes(q) || m.email.toLowerCase().includes(q)
+      );
+
+  renderChatPersonPickerList(filtered);
+}
+
+function renderChatPersonPickerList(list) {
+  const rows = document.getElementById('chatPersonPickerRows');
+  if (!rows) return;
+
+  const overlay = document.getElementById('chatPersonPickerOverlay');
+  const selected = overlay?._selectedKeys || new Set();
+
+  if (!list || list.length === 0) {
+    rows.innerHTML = `
+      <div class="modal-row" style="grid-template-columns: 34px 1.2fr 1.6fr;">
+        <div></div>
+        <div class="muted">No matches</div>
+        <div></div>
+      </div>`;
+    return;
+  }
+
+  rows.innerHTML = list.map(m => {
+    const checked = selected.has(m.key) ? 'checked' : '';
+    return `
+      <div class="modal-row" style="grid-template-columns: 34px 1.2fr 1.6fr;">
+        <div>
+          <input type="checkbox"
+            ${checked}
+            data-key="${escapeHtml(m.key)}"
+            onchange="toggleChatPersonPickerSelection(this.dataset.key, this.checked)"
+            onclick="event.stopPropagation()">
+        </div>
+        <div>${escapeHtml(m.name)}</div>
+        <div class="muted">${escapeHtml(m.email)}</div>
+      </div>`;
+  }).join('');
+}
+
+function toggleChatPersonPickerSelection(key, checked) {
+  const overlay = document.getElementById('chatPersonPickerOverlay');
+  if (!overlay) return;
+
+  overlay._selectedKeys ??= new Set();
+  if (checked) overlay._selectedKeys.add(key);
+  else overlay._selectedKeys.delete(key);
+
+  updateChatPersonPickerCount();
+}
+
+function updateChatPersonPickerCount() {
+  const overlay = document.getElementById('chatPersonPickerOverlay');
+  const count = overlay?._selectedKeys ? overlay._selectedKeys.size : 0;
+  const el = document.getElementById('chatPersonPickerSelectedCount');
+  if (el) el.textContent = `Selected: ${count}`;
+}
+
+function clearChatPersonPickerSelection() {
+  const overlay = document.getElementById('chatPersonPickerOverlay');
+  if (!overlay) return;
+
+  overlay._selectedKeys = new Set();
+  updateChatPersonPickerCount();
+
+  const q = (document.getElementById('chatPersonPickerSearch')?.value || '').trim();
+  filterChatPersonPickerList(q);
+}
+
+function addSelectedChatPersons() {
+  const overlay = document.getElementById('chatPersonPickerOverlay');
+  const selectedKeys = overlay?._selectedKeys ? Array.from(overlay._selectedKeys) : [];
+
+  if (selectedKeys.length === 0) {
+    showCopyToast('No members selected');
+    return;
+  }
+
+  const all = overlay?._allMembers || [];
+  const existingSet = new Set(chatMessagesPersons.map(r => r.email.toLowerCase()));
+  let added = 0;
+
+  selectedKeys.forEach(key => {
+    const found = all.find(m => m.key === key);
+    if (!found) return;
+    if (existingSet.has(found.email.toLowerCase())) return;
+
+    chatMessagesPersons.push({ name: found.name, email: found.email });
+    existingSet.add(found.email.toLowerCase());
+    added++;
+  });
+
+  renderChatPersonsList();
+  showCopyToast(`${added} person(s) added`);
+  closeChatPersonPickerModal();
+}
+
+function ensureChatPersonPickerModal() {
+  let overlay = document.getElementById('chatPersonPickerOverlay');
+  if (overlay) return;
+
+  overlay = document.createElement('div');
+  overlay.id = 'chatPersonPickerOverlay';
+  overlay.className = 'modal-overlay';
+  overlay.style.display = 'none';
+  overlay.style.zIndex = '99999';
+
+  overlay.innerHTML = `
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="chatPersonPickerTitle">
+      <div class="modal-header">
+        <div>
+          <div id="chatPersonPickerTitle" class="modal-title">Select People</div>
+          <div class="modal-subtitle">
+            Pick from project members
+            <span id="chatPersonPickerSelectedCount" class="muted" style="margin-left:10px;">Selected: 0</span>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:10px;">
+          <button class="btn-tiny" onclick="addSelectedChatPersons()">Add</button>
+          <button class="btn-secondary btn-tiny" onclick="clearChatPersonPickerSelection()">Clear</button>
+          <span class="modal-separator" style="color:var(--separator-hard); font-weight:600;">│</span>
+          <button class="btn-secondary" onclick="closeChatPersonPickerModal()">Close</button>
+        </div>
+      </div>
+
+      <div class="modal-body">
+        <input
+          id="chatPersonPickerSearch"
+          class="modal-search"
+          placeholder="Search by name or email..."
+          oninput="filterChatPersonPickerList(this.value)"
+        />
+
+        <div class="modal-list">
+          <div class="modal-list-header" style="grid-template-columns: 34px 1.2fr 1.6fr;">
+            <div></div>
+            <div>Name</div>
+            <div>Email</div>
+          </div>
+
+          <div id="chatPersonPickerRows" class="modal-rows"></div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <div style="height:20px; display:flex;"></div>
+      </div>
+    </div>
+  `;
+
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) closeChatPersonPickerModal();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (overlay.style.display === 'flex' && e.key === 'Escape') {
+      e.stopPropagation();
+      closeChatPersonPickerModal();
+    }
+  });
+
+  document.body.appendChild(overlay);
+}
 
 
 normalizeProjects();
@@ -5489,7 +6303,7 @@ const dayFilterSelect = document.getElementById('dayFilterSelect');
 if (dayFilterSelect) dayFilterSelect.value = dayFilter;
 
 const collapseModeSelect = document.getElementById('collapseModeSelect');
-if (collapseModeSelect) collapseModeSelect.value = '';
+if (collapseModeSelect) collapseModeSelect.value = collapseMode;
 
 document.addEventListener('dragend', clearDragIndicators, true);
 document.addEventListener('drop', () => {
