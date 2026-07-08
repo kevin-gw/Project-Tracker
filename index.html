@@ -1027,6 +1027,7 @@ textarea {
       <option value="uncheckedMeeting">Unchecked Weekly Meeting</option>
       <option value="uncheckedMeetingRequired">Unchecked Meeting + Weekly Meeting Required</option>
       <option value="noTitleOrDesc">No Title or No Description</option>
+      <option value="noDhcsSnow">No DHCS SNOW Link</option>
       <option value="hotProjects">Hot Projects</option>
       <option value="reviewGroup1">Review Group #1</option>
       <option value="reviewGroup2">Review Group #2</option>
@@ -1100,7 +1101,7 @@ textarea {
 <script>
 let projects = JSON.parse(localStorage.getItem('projects') || '[]');
 
-let viewMode = ['active', 'archived', 'all', 'orp', 'general', 'uncheckedMeeting', 'uncheckedMeetingRequired', 'noTitleOrDesc', 'hotProjects', 'reviewGroup1', 'reviewGroup2', 'reviewGroup3', 'reviewGroup4', 'reviewGroup5', 'reviewGroup6', 'reviewGroup7'].includes(localStorage.getItem('viewMode'))
+let viewMode = ['active', 'archived', 'all', 'orp', 'general', 'uncheckedMeeting', 'uncheckedMeetingRequired', 'noTitleOrDesc', 'noDhcsSnow', 'hotProjects', 'reviewGroup1', 'reviewGroup2', 'reviewGroup3', 'reviewGroup4', 'reviewGroup5', 'reviewGroup6', 'reviewGroup7'].includes(localStorage.getItem('viewMode'))
 ? localStorage.getItem('viewMode')
 : 'active';
 
@@ -1166,6 +1167,8 @@ let dragChatPersonIndex = null;
 
 let collapseMode = localStorage.getItem('collapseMode') || '';
 
+
+
 function render() {
 
 
@@ -1184,6 +1187,7 @@ function render() {
     if (!Array.isArray(p.emailTemplates)) p.emailTemplates = [];
     if (!Array.isArray(p.meetingMinutes)) p.meetingMinutes = [];
     if (!Array.isArray(p.chatMessages)) p.chatMessages = [];
+    if (!Array.isArray(p.quickNotes)) p.quickNotes = [];
 
     
     p.members.forEach(m => {
@@ -1229,6 +1233,7 @@ renderOrder.forEach(i => {
     if (viewMode === 'uncheckedMeeting' && (p.archived || p.weeklyMeeting)) return;
     if (viewMode === 'uncheckedMeetingRequired' && (p.archived || p.weeklyMeeting || p.noWeeklyMeetingRequired)) return;
     if (viewMode === 'noTitleOrDesc' && (p.archived || ((p.name2 || '').trim() && (p.description || '').trim()))) return;
+    if (viewMode === 'noDhcsSnow' && (p.archived || (p.hyperlinks || []).some(l => l.type === 'DHCS SNOW Link'))) return;
     if (viewMode === 'hotProjects' && (p.archived || !p.hotProject)) return;
     if (viewMode.startsWith('reviewGroup') && (p.archived || (p.dailyReviewGroup || '').trim() !== viewMode.replace('reviewGroup', ''))) return;
   }
@@ -2147,12 +2152,47 @@ ${(p.emailTemplates || []).map((t, idx) => `
       >🗑️</button>
     </span>
   </li>
+
 `).join('')}
 
     </ul>
 
+    <!-- Quick Notes -->
+    <div class="section-header">Quick Notes</div>
+    <div class="row">
+      <input class="add-task-input"
+        placeholder="Add quick note"
+        id="quickNoteInput-${i}"
+        onkeydown="if(event.key==='Enter'){event.preventDefault(); addQuickNote(${i})}"
+      >
+      <button class="btn-shorter" onclick="addQuickNote(${i})">Add Quick Note</button>
+    </div>
+
+    <ul class="bulleted-list">
+      ${(p.quickNotes || []).map((n, idx) => `
+        <li class="task-card"
+            draggable="true"
+            ondragstart="quickNoteDragStart(${i}, ${idx})"
+            ondragend="quickNoteDragEnd()"
+            ondragover="handleDragIndicator(event, this)"
+            ondrop="quickNoteDrop(${i}, ${idx})">
+
+          <span class="task-content">
+            <span>${escapeHtml(n.text)}</span>
+
+            <button onclick="editQuickNote(${i}, ${idx})"
+                    style="font-size:11px; padding:2px 6px;">✏️</button>
+
+            <button onclick="deleteQuickNote(${i}, ${idx})"
+                    style="font-size:11px; padding:2px 6px;">🗑️</button>
+          </span>
+        </li>
+      `).join('')}
+    </ul>
+
     <!-- Project Notes -->
     <div class="section-header">Project Notes</div>
+
 
     <div class="editor-toolbar">
       <button class="btn-secondary" type="button" onclick="notesCmd(${i},'bold')"><b>B</b></button>
@@ -2250,6 +2290,7 @@ function addProject() {
     emailTemplates: [],
     notes:'',
     chatMessages: [],
+    quickNotes: [],
     primaryVendor: '',
     taskStage: '',
     itmoPM: '',
@@ -2347,6 +2388,7 @@ function normalizeProjects() {
     p.emailTemplates ??= [];
     p.projectPhase ??= '';
     p.chatMessages ??= [];
+    p.quickNotes ??= [];
     p.notesHeight ??= 0;
     (p.emailTemplates || []).forEach(t => { t.toEmails ??= []; t.ccEmails ??= []; });
     // Add with the other meeting minutes normalizations
@@ -2750,6 +2792,9 @@ let dragTaskIndex = null;
 let dragDisciplineProject = null;
 let dragDisciplineIndex = null;
 
+let dragQuickNoteProject = null;
+let dragQuickNoteIndex = null;
+
 let existingMemberModalProjectIndex = null;
 
 
@@ -2790,6 +2835,54 @@ function taskDragEnd() {
   dragTaskIndex = null;
 }
 
+
+/* ================================
+   QUICK NOTES
+================================ */
+
+function addQuickNote(projectIndex) {
+  const input = document.getElementById(`quickNoteInput-${projectIndex}`);
+  const text = input.value.trim();
+  if (!text) return;
+
+  projects[projectIndex].quickNotes.push({ text });
+  input.value = '';
+  save();
+  render();
+}
+
+function editQuickNote(projectIndex, noteIndex) {
+  const note = projects[projectIndex].quickNotes[noteIndex];
+  const next = prompt('Edit quick note', note.text);
+  if (next === null) return;
+
+  note.text = next.trim() || note.text;
+  save();
+  render();
+}
+
+function deleteQuickNote(projectIndex, noteIndex) {
+  projects[projectIndex].quickNotes.splice(noteIndex, 1);
+  save();
+  render();
+}
+
+function quickNoteDragStart(projectIndex, noteIndex) {
+  dragQuickNoteProject = projectIndex;
+  dragQuickNoteIndex = noteIndex;
+}
+
+function quickNoteDragEnd() {
+  dragQuickNoteProject = null;
+  dragQuickNoteIndex = null;
+}
+
+function quickNoteDrop(projectIndex, targetIndex) {
+  if (dragQuickNoteProject !== projectIndex) return;
+  applyDragReorder(projects[projectIndex].quickNotes, dragQuickNoteIndex, targetIndex);
+  save();
+  render();
+}
 
 
 let currentDropPosition = 'before';
@@ -5326,6 +5419,7 @@ function changeCollapseMode(mode) {
     if (viewMode === 'uncheckedMeeting' && (p.archived || p.weeklyMeeting)) return;
     if (viewMode === 'uncheckedMeetingRequired' && (p.archived || p.weeklyMeeting || p.noWeeklyMeetingRequired)) return;
     if (viewMode === 'noTitleOrDesc' && (p.archived || ((p.name2 || '').trim() && (p.description || '').trim()))) return;
+    if (viewMode === 'noDhcsSnow' && (p.archived || (p.hyperlinks || []).some(l => l.type === 'DHCS SNOW Link'))) return;
     if (viewMode === 'hotProjects' && (p.archived || !p.hotProject)) return;
     if (viewMode.startsWith('reviewGroup') && (p.archived || (p.dailyReviewGroup || '').trim() !== viewMode.replace('reviewGroup', ''))) return;
   }
